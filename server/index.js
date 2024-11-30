@@ -5,6 +5,8 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
 
 // MongoDB connection URI and client
 const uri = "mongodb://mongo:27017";
@@ -36,7 +38,6 @@ app.get('/api/trades', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Get details for a specific trade
 app.get('/api/trades/:tradeCode', async (req, res) => {
   try {
@@ -49,21 +50,31 @@ app.get('/api/trades/:tradeCode', async (req, res) => {
       return res.status(404).json({ error: 'Trade not found' });
     }
 
-    // Get core courses for the trade
-    const coreCourses = await db.collection('courses')
-      .find({ 
-        trade: tradeCode,
-        type: 'core'
-      })
-      .toArray();
-
-    // Get specialty tracks for the trade
-    const specialtyTracks = await db.collection('specialty_tracks')
+    // Get all courses for the trade
+    const courses = await db.collection('courses')
       .find({ trade: tradeCode })
       .toArray();
 
-    console.log('Found courses:', coreCourses.length);
-    console.log('Found specialty tracks:', specialtyTracks.length);
+    // Separate core courses and track courses
+    const coreCourses = courses.filter(course => course.type === 'core');
+    const trackCourses = courses.filter(course => course.type !== 'core');
+
+    // Get unique track types
+    const trackTypes = [...new Set(trackCourses.map(course => course.type))];
+
+    // Build specialty tracks data
+    const specialtyTracks = trackTypes.map(type => {
+      const trackCoursesOfType = trackCourses.filter(course => course.type === type);
+      const { color, description } = trackCoursesOfType[0]; // Assuming color and description are the same for all courses in a track
+      return {
+        code: type,
+        name: trackCoursesOfType[0].name.split(' I')[0], // Extract base name
+        description,
+        color,
+        courses: trackCoursesOfType,
+        minimumRank: trackCoursesOfType[0].rank
+      };
+    });
 
     res.json({
       trade,
@@ -106,6 +117,23 @@ app.get('/api/ranks/:rankName', async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching rank:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/node-click', async (req, res) => {
+  const { courseCode } = req.body;
+  console.log('Course code received:', courseCode);
+
+  try {
+    // Fetch sessions for the given courseCode
+    const sessions = await db.collection('course_sessions')
+      .find({ courseCode })
+      .toArray();
+
+    res.json({ sessions });
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
     res.status(500).json({ error: error.message });
   }
 });

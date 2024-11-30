@@ -1,5 +1,3 @@
-// src/components/NetworkPath.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Compass } from 'lucide-react';
 import './css/NetworkPath.css';
@@ -8,35 +6,14 @@ const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 800;
 const VERTICAL_OFFSET = 150;
 const NODE_RADIUS = 8;
-const API_URL = 'http://localhost:3000';
 
-const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
+const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions }) => {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [dimensions, setDimensions] = useState({
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
   });
-  const [tradeData, setTradeData] = useState(null);
   const containerRef = useRef(null);
-
-  // Fetch data Hook
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/trades/${tradeCode}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Fetched trade data:', data);
-        setTradeData(data);
-      } catch (error) {
-        console.error('Error fetching trade data:', error);
-      }
-    };
-
-    fetchData();
-  }, [tradeCode]);
 
   // Handle resize Hook
   useEffect(() => {
@@ -66,6 +43,7 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
 
   const { trade, coreCourses, specialtyTracks } = tradeData;
 
+
   // Calculate node positions for vertical layout
   const calculatePositions = () => {
     const { width, height } = dimensions;
@@ -73,6 +51,7 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
     const topOffset = verticalSpacing * 0.5; // Reduced top spacing
     const horizontalCenter = width / 2;
 
+    // Position core courses vertically centered
     const corePositions = coreCourses.map((course, index) => ({
       ...course,
       x: horizontalCenter,
@@ -80,27 +59,32 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
       isCore: true,
     }));
 
-    const branchPositions = coreCourses.flatMap((coreCourse, coreIndex) => {
-      const relevantTracks = specialtyTracks.filter(
-        (track) => track.minimumRank === coreCourse.rank
-      );
+    // Position track courses branching off from the core courses
+    const trackPositions = [];
 
-      return relevantTracks.flatMap((track, trackIndex) => {
-        return track.courses.map((course, seqIndex) => ({
-          name: course,
-          x:
-            corePositions[coreIndex].x +
-            (seqIndex % 2 === 0 ? -1 : 1) * VERTICAL_OFFSET * (seqIndex + 1),
-          y: corePositions[coreIndex].y + (trackIndex + 1) * VERTICAL_OFFSET,
-          track: track.code,
+    specialtyTracks.forEach((track) => {
+      const baseCourse = coreCourses.find((course) => course.rank === track.minimumRank);
+      const basePosition = corePositions.find((pos) => pos.courseCode === baseCourse.courseCode);
+
+      track.courses.forEach((course, index) => {
+        const xOffset = (index % 2 === 0 ? -1 : 1) * VERTICAL_OFFSET * (index + 1);
+        const yOffset = (index + 1) * VERTICAL_OFFSET;
+
+        const previousCourseCode = course.prerequisites && course.prerequisites[0];
+        const previousPosition = trackPositions.find((pos) => pos.courseCode === previousCourseCode);
+
+        trackPositions.push({
+          ...course,
+          x: previousPosition ? previousPosition.x + xOffset : basePosition.x + xOffset,
+          y: previousPosition ? previousPosition.y + yOffset : basePosition.y + yOffset,
           isCore: false,
-          branchStartIndex: coreIndex,
-          rank: track.minimumRank,
-        }));
+          track: track.code,
+          color: track.color,
+        });
       });
     });
 
-    return [...corePositions, ...branchPositions];
+    return [...corePositions, ...trackPositions];
   };
 
   const nodePositions = calculatePositions();
@@ -111,29 +95,29 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
 
     // Core paths
     for (let i = 0; i < coreCourses.length - 1; i++) {
-      const start = nodePositions.find(
-        (n) => n.courseCode === coreCourses[i].courseCode
-      );
-      const end = nodePositions.find(
-        (n) => n.courseCode === coreCourses[i + 1].courseCode
-      );
+      const start = nodePositions.find((n) => n.courseCode === coreCourses[i].courseCode);
+      const end = nodePositions.find((n) => n.courseCode === coreCourses[i + 1].courseCode);
       if (start && end) {
         paths.push({ start, end, isCore: true });
       }
     }
 
-    // Branch paths
+    // Track paths
     specialtyTracks.forEach((track) => {
-      const trackNodes = nodePositions.filter((n) => n.track === track.code);
-      trackNodes.forEach((node, index) => {
-        if (index > 0) {
-          paths.push({ start: trackNodes[index - 1], end: node, track: track.code });
+      track.courses.forEach((course) => {
+        const node = nodePositions.find((n) => n.courseCode === course.courseCode);
+        if (course.prerequisites && course.prerequisites.length > 0) {
+          const prerequisiteCode = course.prerequisites[0];
+          const prerequisiteNode = nodePositions.find((n) => n.courseCode === prerequisiteCode);
+          if (node && prerequisiteNode) {
+            paths.push({ start: prerequisiteNode, end: node, track: track.code });
+          }
         } else {
-          const coreNode = nodePositions.find(
-            (n) => n.isCore && n.rank === track.minimumRank
-          );
-          if (coreNode) {
-            paths.push({ start: coreNode, end: node, track: track.code });
+          // Connect to the base course in core positions
+          const baseCourse = coreCourses.find((c) => c.rank === track.minimumRank);
+          const baseNode = nodePositions.find((n) => n.courseCode === baseCourse.courseCode);
+          if (node && baseNode) {
+            paths.push({ start: baseNode, end: node, track: track.code });
           }
         }
       });
@@ -154,7 +138,7 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
   // Calculate rank positions
   const calculateRankPositions = () => {
     const ranks = [...new Set(nodePositions.map((node) => node.rank))];
-    ranks.sort((a, b) => a - b); // Assuming ranks are numerical values
+    ranks.sort((a, b) => a - b); // You may need to adjust sorting based on rank order
 
     const rankPositions = ranks.map((rank) => {
       // Find nodes with this rank
@@ -303,14 +287,42 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
               : isHighlighted
               ? getTrackColor(node.track)
               : '#8B4513';
-            const isSelected = selectedNode?.name === node.name;
+            const isSelected = selectedNode?.courseCode === node.courseCode;
 
             return (
               <g
                 key={`node-${index}`}
                 transform={`translate(${node.x},${node.y})`}
                 className="cursor-pointer transition-transform hover:scale-110"
-                onClick={() => setSelectedNode(isSelected ? null : node)}
+                onClick={() => {
+                  const newSelectedNode = isSelected ? null : node;
+                  setSelectedNode(newSelectedNode);
+
+                  if (newSelectedNode) {
+                    // Send a POST request to the server when a node is clicked
+                    fetch('http://localhost:3000/api/node-click', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        courseCode: node.courseCode,
+                        name: node.name,
+                      }),
+                    })
+                      .then((response) => response.json())
+                      .then((data) => {
+                        console.log('Response from server:', data);
+                        setNodeSessions(data.sessions);
+                      })
+                      .catch((error) => {
+                        console.error('Error sending node data:', error);
+                        setNodeSessions(null);
+                      });
+                  } else {
+                    setNodeSessions(null);
+                  }
+                }}
                 role="button"
                 tabIndex={0}
                 onKeyPress={(e) => {

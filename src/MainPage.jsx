@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import NetworkPath from './components/NetworkPath';
 import CourseDetails from './components/CourseDetails';
-import './components/css/MainPage.css'; // Ensure the path is correct
+import './components/css/MainPage.css';
 
 function MainPage() {
   const [selectedTradeCode, setSelectedTradeCode] = useState(null);
@@ -9,12 +9,18 @@ function MainPage() {
   const [filteredTrades, setFilteredTrades] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [commissionedFilter, setCommissionedFilter] = useState('All');
+  const [nodeSessions, setNodeSessions] = useState(null);
+
+  // **New state for tradeData**
+  const [tradeData, setTradeData] = useState(null);
+
+  const API_URL = 'http://localhost:3000';
 
   // Fetch available trades from the server
   useEffect(() => {
     const fetchTrades = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/trades');
+        const response = await fetch(`${API_URL}/api/trades`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -27,6 +33,29 @@ function MainPage() {
 
     fetchTrades();
   }, []);
+
+  // Fetch trade data when a trade is selected
+  useEffect(() => {
+    if (selectedTradeCode) {
+      const fetchTradeData = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/trades/${selectedTradeCode}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          console.log('Fetched trade data:', data);
+          setTradeData(data);
+        } catch (error) {
+          console.error('Error fetching trade data:', error);
+        }
+      };
+
+      fetchTradeData();
+    } else {
+      setTradeData(null);
+    }
+  }, [selectedTradeCode]);
 
   // Filter trades based on the commissioned status
   useEffect(() => {
@@ -49,7 +78,12 @@ function MainPage() {
         <select
           id="commissionedFilter"
           value={commissionedFilter}
-          onChange={(e) => setCommissionedFilter(e.target.value)}
+          onChange={(e) => {
+            setCommissionedFilter(e.target.value);
+            setSelectedTradeCode(null); // Reset selected trade when filter changes
+            setSelectedNode(null); // Reset selected node
+            setTradeData(null); // Reset trade data
+          }}
         >
           <option value="All">All</option>
           <option value="Commissioned">Commissioned</option>
@@ -62,7 +96,11 @@ function MainPage() {
         {filteredTrades.map((trade) => (
           <button
             key={trade.code}
-            onClick={() => setSelectedTradeCode(trade.code)}
+            onClick={() => {
+              setSelectedTradeCode(trade.code);
+              setSelectedNode(null); // Reset selected node when a new trade is selected
+              setNodeSessions(null); // Reset sessions data
+            }}
             className={`trade-button ${
               selectedTradeCode === trade.code ? 'selected' : 'unselected'
             }`}
@@ -78,9 +116,10 @@ function MainPage() {
         <div className="networkpath-wrapper">
           {selectedTradeCode ? (
             <NetworkPath
-              tradeCode={selectedTradeCode}
+              tradeData={tradeData}
               selectedNode={selectedNode}
               setSelectedNode={setSelectedNode}
+              setNodeSessions={setNodeSessions}
             />
           ) : (
             <p className="placeholder-text">
@@ -92,9 +131,8 @@ function MainPage() {
           {selectedNode ? (
             <CourseDetails
               selectedNode={selectedNode}
-              specialtyTracks={
-                trades.find((trade) => trade.code === selectedTradeCode)?.specialtyTracks || []
-              }
+              specialtyTracks={tradeData?.specialtyTracks || []}
+              nodeSessions={nodeSessions}
             />
           ) : (
             <div className="placeholder-text">Select a course to see details here.</div>

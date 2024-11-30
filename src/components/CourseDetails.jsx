@@ -1,19 +1,28 @@
-// src/components/CourseDetails.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import './css/CourseDetails.css';
 
-const CourseDetails = ({ selectedNode, specialtyTracks }) => {
+const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
   if (!selectedNode) return null;
 
-  const { name, courseCode, isCore, rank, hours, track } = selectedNode;
+  const { name, courseCode, isCore, rank, hours, type } = selectedNode;
 
-  // Find the track name if the course is part of a specialty track
+  // Find the track details if the course is part of a specialty track
   const trackDetails = !isCore
-    ? specialtyTracks.find((t) => t.code === track)
+    ? specialtyTracks.find((t) => t.code === type)
     : null;
   const trackName = trackDetails?.name;
   const trackColor = trackDetails?.color || '#6b7280'; // Default to gray if no color
+
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   return (
     <div
@@ -26,6 +35,11 @@ const CourseDetails = ({ selectedNode, specialtyTracks }) => {
       <p className="course-details-subtitle">
         {isCore ? 'Core Course' : `${trackName} Track`}
       </p>
+
+      <div className="course-details-info">
+        <span className="info-label">Course Code:</span>
+        <span className="info-value">{courseCode}</span>
+      </div>
 
       {isCore ? (
         <>
@@ -49,6 +63,32 @@ const CourseDetails = ({ selectedNode, specialtyTracks }) => {
           </span>
         </div>
       )}
+
+      {/* Display Sessions Data in Card Format */}
+      {nodeSessions && nodeSessions.length > 0 ? (
+        <div className="course-sessions">
+          <h4>Upcoming Sessions:</h4>
+          <div className="sessions-grid">
+            {nodeSessions.map((session, index) => (
+              <div className="session-card" key={index}>
+                <div className="session-card-header">
+                  <h5>{session.school}</h5>
+                </div>
+                <div className="session-card-body">
+                  <p>
+                    <strong>Date:</strong> {formatDate(session.startDate)} - {formatDate(session.endDate)}
+                  </p>
+                  <p>
+                    <strong>Location:</strong> {session.location}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p>No upcoming sessions available for this course.</p>
+      )}
     </div>
   );
 };
@@ -60,7 +100,7 @@ CourseDetails.propTypes = {
     isCore: PropTypes.bool.isRequired,
     rank: PropTypes.string,
     hours: PropTypes.number,
-    track: PropTypes.string,
+    type: PropTypes.string, // Added 'type' to propTypes
   }),
   specialtyTracks: PropTypes.arrayOf(
     PropTypes.shape({
@@ -68,9 +108,17 @@ CourseDetails.propTypes = {
       name: PropTypes.string.isRequired,
       color: PropTypes.string,
       minimumRank: PropTypes.string,
-      courses: PropTypes.arrayOf(PropTypes.string),
+      courses: PropTypes.arrayOf(PropTypes.object), // Adjusted to match the new data structure
     })
   ).isRequired,
+  nodeSessions: PropTypes.arrayOf(
+    PropTypes.shape({
+      startDate: PropTypes.string.isRequired,
+      endDate: PropTypes.string.isRequired,
+      location: PropTypes.string.isRequired,
+      school: PropTypes.string.isRequired,
+    })
+  ),
 };
 
 export default CourseDetails;
