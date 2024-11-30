@@ -4,32 +4,34 @@ const DEFAULT_WIDTH = 1000;
 const DEFAULT_HEIGHT = 600;
 const NODE_RADIUS = 35;
 const VERTICAL_OFFSET = 120;
-const API_URL = 'http://localhost:3000'; // We'll hardcode this for now
+const API_URL = 'http://localhost:3000';
 
-const NetworkPath = ({ tradeCode = 'ELEC' }) => {
+const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [dimensions, setDimensions] = useState({
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT
   });
-  const [tradeData, setTradeData] = useState(null);
+  const [branchData, setBranchData] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/trades/${tradeCode}`);
+        const response = await fetch(`${API_URL}/api/branches/${branchCode}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        console.log('Fetched data:', data); // For debugging
-        setTradeData(data);
+        setBranchData(data);
       } catch (error) {
-        console.error('Error fetching trade data:', error);
+        console.error('Error fetching branch data:', error);
       }
     };
 
     fetchData();
-  }, [tradeCode]);
+  }, [branchCode]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,23 +48,20 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Show loading state
-  if (!tradeData) {
+  if (!branchData) {
     return (
       <div className="w-full h-[600px] flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading trade data...</p>
+        <p className="text-lg text-gray-600">Loading training path data...</p>
       </div>
     );
   }
 
-  const { coreCourses, specialtyTracks } = tradeData;
+  const { coreCourses, specialtyTracks } = branchData;
 
-  // Calculate positions for core path and branches
   const calculatePositions = () => {
     const { width, height } = dimensions;
     const horizontalSpacing = width / (coreCourses.length + 1);
     
-    // Calculate core path positions
     const corePositions = coreCourses.map((course, index) => ({
       ...course,
       x: horizontalSpacing * (index + 1),
@@ -70,7 +69,6 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
       isCore: true
     }));
 
-    // Calculate branch positions for specialty tracks
     const branchPositions = coreCourses.flatMap((coreCourse, coreIndex) => {
       const relevantTracks = specialtyTracks.filter(track => 
         track.minimumRank === coreCourse.rank
@@ -121,7 +119,6 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
             track: track.code
           });
         } else {
-          // Connect to core path
           const coreNode = nodePositions.find(n => 
             n.isCore && n.rank === track.minimumRank
           );
@@ -142,7 +139,6 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
   const nodePositions = calculatePositions();
   const paths = generatePaths(nodePositions);
 
-  // Get track color
   const getTrackColor = (trackCode) => {
     const track = specialtyTracks.find(t => t.code === trackCode);
     return track ? track.color : '#e5e7eb';
@@ -156,7 +152,9 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
           {specialtyTracks.map((track) => (
             <button
               key={track.code}
-              onClick={() => setSelectedTrack(selectedTrack === track.code ? null : track.code)}
+              onClick={() => setSelectedTrack(
+                selectedTrack === track.code ? null : track.code
+              )}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 selectedTrack === track.code ? 'text-white' : 'text-gray-700'
               }`}
@@ -213,7 +211,7 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
               >
                 <circle
                   r={NODE_RADIUS}
-                  fill={selectedNode?.name === node.name ? nodeColor : "#fff"}
+                  fill={selectedNode?.name === node.name ? nodeColor : '#fff'}
                   stroke={nodeColor}
                   strokeWidth={node.isCore ? "3" : "2"}
                   className="transition-colors duration-300"
@@ -244,7 +242,7 @@ const NetworkPath = ({ tradeCode = 'ELEC' }) => {
               </>
             ) : (
               <p className="text-sm text-gray-600">
-                {specialtyTracks.find(t => t.code === selectedNode.track)?.name} Specialization
+                {specialtyTracks.find(t => t.code === selectedNode.track)?.name} Track
               </p>
             )}
           </div>

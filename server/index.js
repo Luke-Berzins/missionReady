@@ -13,25 +13,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/trades/:tradeCode', async (req, res) => {
+app.get('/api/branches/:branchCode', async (req, res) => {
   try {
     await client.connect();
-    const db = client.db('career_paths');
+    const db = client.db('artillery_training');
     
-    const tradeCode = req.params.tradeCode;
-    console.log('Fetching data for trade:', tradeCode);
+    const branchCode = req.params.branchCode;
+    console.log('Fetching data for branch:', branchCode);
 
-    // Get core courses for the trade
+    // Get core courses for the branch
     const coreCourses = await db.collection('courses')
       .find({ 
-        trade: tradeCode,
+        branch: branchCode,
         type: 'core'
       })
+      .sort({ courseCode: 1 })
       .toArray();
 
-    // Get specialty tracks for the trade
+    // Get specialty tracks for the branch
     const specialtyTracks = await db.collection('specialty_tracks')
-      .find({ trade: tradeCode })
+      .find({ branch: branchCode })
       .toArray();
 
     console.log('Found courses:', coreCourses.length);
