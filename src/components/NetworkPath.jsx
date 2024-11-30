@@ -263,7 +263,7 @@ const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
                 fontWeight="bold"
                 textAnchor="start"
               >
-                Rank {rankZone.rank}
+                {rankZone.rank}
               </text>
             </g>
           ))}

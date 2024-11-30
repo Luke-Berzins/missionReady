@@ -77,6 +77,39 @@ app.get('/api/trades/:tradeCode', async (req, res) => {
   }
 });
 
+/** NEW ROUTES FOR RANKS **/
+
+// Get all ranks
+app.get('/api/ranks', async (req, res) => {
+  try {
+    const ranks = await db.collection('ranks').find({}).sort({ order: 1 }).toArray();
+    res.json(ranks);
+  } catch (error) {
+    console.error('Error fetching ranks:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get details for a specific rank
+app.get('/api/ranks/:rankName', async (req, res) => {
+  try {
+    const rankName = req.params.rankName;
+    console.log('Fetching data for rank:', rankName);
+
+    // Get rank details
+    const rank = await db.collection('ranks').findOne({ rank: rankName });
+    if (!rank) {
+      return res.status(404).json({ error: 'Rank not found' });
+    }
+
+    res.json(rank);
+
+  } catch (error) {
+    console.error('Error fetching rank:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

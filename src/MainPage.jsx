@@ -1,4 +1,3 @@
-// src/components/MainPage.jsx
 import { useState, useEffect } from 'react';
 import NetworkPath from './components/NetworkPath';
 import CourseDetails from './components/CourseDetails';
@@ -7,7 +6,9 @@ import './components/css/MainPage.css'; // Ensure the path is correct
 function MainPage() {
   const [selectedTradeCode, setSelectedTradeCode] = useState(null);
   const [trades, setTrades] = useState([]);
+  const [filteredTrades, setFilteredTrades] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [commissionedFilter, setCommissionedFilter] = useState('All');
 
   // Fetch available trades from the server
   useEffect(() => {
@@ -27,13 +28,38 @@ function MainPage() {
     fetchTrades();
   }, []);
 
+  // Filter trades based on the commissioned status
+  useEffect(() => {
+    let filtered = trades;
+    if (commissionedFilter === 'Commissioned') {
+      filtered = trades.filter((trade) => trade.commissioned === true);
+    } else if (commissionedFilter === 'Non-Commissioned') {
+      filtered = trades.filter((trade) => trade.commissioned === false);
+    }
+    setFilteredTrades(filtered);
+  }, [commissionedFilter, trades]);
+
   return (
     <div className="mainpage-container">
       <h1 className="mainpage-heading">Career Progression Paths</h1>
 
+      {/* Commissioned Status Dropdown */}
+      <div className="commissioned-filter-container">
+        <label htmlFor="commissionedFilter">Filter by Commission Status: </label>
+        <select
+          id="commissionedFilter"
+          value={commissionedFilter}
+          onChange={(e) => setCommissionedFilter(e.target.value)}
+        >
+          <option value="All">All</option>
+          <option value="Commissioned">Commissioned</option>
+          <option value="Non-Commissioned">Non-Commissioned</option>
+        </select>
+      </div>
+
       {/* Trade Selection Buttons */}
       <div className="trade-buttons-container">
-        {trades.map((trade) => (
+        {filteredTrades.map((trade) => (
           <button
             key={trade.code}
             onClick={() => setSelectedTradeCode(trade.code)}
