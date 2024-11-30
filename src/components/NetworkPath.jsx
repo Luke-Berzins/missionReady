@@ -1,16 +1,13 @@
-// components/NetworkPath.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import CourseDetails from './CourseDetails'; // Adjust the path as necessary
+import { Compass } from 'lucide-react';
 
-const DEFAULT_WIDTH = 800;
-const DEFAULT_HEIGHT = 600;
-const HORIZONTAL_OFFSET = 150; // Renamed from VERTICAL_OFFSET for clarity
-const NODE_RADIUS = 10;
-const API_URL = 'http://localhost:3000'; // Replace with your actual API URL
+const DEFAULT_WIDTH = 600;
+const DEFAULT_HEIGHT = 800;
+const VERTICAL_OFFSET = 150;
+const NODE_RADIUS = 8;
+const API_URL = 'http://localhost:3000';
 
-const NetworkPath = ({ tradeCode }) => {
-  // 1. Declare all Hooks at the top level
-  const [selectedNode, setSelectedNode] = useState(null);
+const NetworkPath = ({ tradeCode, selectedNode, setSelectedNode }) => {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [dimensions, setDimensions] = useState({
     width: DEFAULT_WIDTH,
@@ -19,7 +16,7 @@ const NetworkPath = ({ tradeCode }) => {
   const [tradeData, setTradeData] = useState(null);
   const containerRef = useRef(null);
 
-  // 2. Fetch data Hook
+  // Fetch data Hook
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,7 +25,7 @@ const NetworkPath = ({ tradeCode }) => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Fetched trade data:', data); // Debugging line
+        console.log('Fetched trade data:', data);
         setTradeData(data);
       } catch (error) {
         console.error('Error fetching trade data:', error);
@@ -38,13 +35,13 @@ const NetworkPath = ({ tradeCode }) => {
     fetchData();
   }, [tradeCode]);
 
-  // 3. Handle resize Hook
+  // Handle resize Hook
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
         setDimensions({
           width: containerRef.current.offsetWidth || DEFAULT_WIDTH,
-          height: DEFAULT_HEIGHT,
+          height: containerRef.current.offsetHeight || DEFAULT_HEIGHT,
         });
       }
     };
@@ -54,43 +51,32 @@ const NetworkPath = ({ tradeCode }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 4. Debugging Hook (ensure it's always called)
-  useEffect(() => {
-    if (tradeData) {
-      const { trade, coreCourses, specialtyTracks } = tradeData;
-      console.log('Trade:', trade);
-      console.log('Core Courses:', coreCourses);
-      console.log('Specialty Tracks:', specialtyTracks);
-    }
-  }, [tradeData]);
-
-  // 5. Early return based on tradeData
   if (!tradeData) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading training path data...</p>
+      <div className="w-full h-full bg-olive-50 flex items-center justify-center">
+        <p className="font-military text-olive-800 text-lg tracking-wider uppercase">
+          Loading training path data...
+        </p>
       </div>
     );
   }
 
-  // 6. Destructure tradeData after ensuring it's not null
   const { trade, coreCourses, specialtyTracks } = tradeData;
 
-  // 7. Calculate node positions for horizontal layout
+  // Calculate node positions for vertical layout
   const calculatePositions = () => {
     const { width, height } = dimensions;
-    const horizontalSpacing = width / (coreCourses.length + 1); // Spread core nodes horizontally
-    const verticalCenter = height / 2; // Center core nodes vertically
+    const verticalSpacing = height / (coreCourses.length + 2);
+    const topOffset = verticalSpacing * 0.5; // Reduced top spacing
+    const horizontalCenter = width / 2;
 
-    // Calculate core path positions
     const corePositions = coreCourses.map((course, index) => ({
       ...course,
-      x: horizontalSpacing * (index + 1), // Distribute nodes horizontally
-      y: verticalCenter, // Align all core nodes vertically at the center
+      x: horizontalCenter,
+      y: topOffset + (verticalSpacing * index),
       isCore: true,
     }));
 
-    // Calculate branch positions
     const branchPositions = coreCourses.flatMap((coreCourse, coreIndex) => {
       const relevantTracks = specialtyTracks.filter(
         (track) => track.minimumRank === coreCourse.rank
@@ -99,8 +85,8 @@ const NetworkPath = ({ tradeCode }) => {
       return relevantTracks.flatMap((track, trackIndex) => {
         return track.courses.map((course, seqIndex) => ({
           name: course,
-          x: corePositions[coreIndex].x + (trackIndex % 2 === 0 ? -1 : 1) * HORIZONTAL_OFFSET * (seqIndex + 1), // Offset left or right
-          y: corePositions[coreIndex].y - (seqIndex + 1) * (height / 10), // Stack nodes vertically upwards
+          x: corePositions[coreIndex].x + (seqIndex % 2 === 0 ? -1 : 1) * VERTICAL_OFFSET * (seqIndex + 1),
+          y: corePositions[coreIndex].y + (trackIndex + 1) * VERTICAL_OFFSET,
           track: track.code,
           isCore: false,
           branchStartIndex: coreIndex,
@@ -111,11 +97,10 @@ const NetworkPath = ({ tradeCode }) => {
     return [...corePositions, ...branchPositions];
   };
 
-  // 8. Generate paths connecting nodes
   const generatePaths = (nodePositions) => {
     const paths = [];
 
-    // Core paths (connect horizontally)
+    // Core paths
     for (let i = 0; i < coreCourses.length - 1; i++) {
       const start = nodePositions.find(
         (n) => n.courseCode === coreCourses[i].courseCode
@@ -135,7 +120,6 @@ const NetworkPath = ({ tradeCode }) => {
         if (index > 0) {
           paths.push({ start: trackNodes[index - 1], end: node, track: track.code });
         } else {
-          // Corrected line: Use coreCourses instead of trade.coreCourses
           const coreNode = nodePositions.find(
             (n) => n.isCore && n.rank === coreCourses[index]?.rank
           );
@@ -154,107 +138,137 @@ const NetworkPath = ({ tradeCode }) => {
 
   const getTrackColor = (trackCode) => {
     const track = specialtyTracks.find((t) => t.code === trackCode);
-    return track ? track.color : '#e5e7eb';
+    return track ? track.color : '#4A5F31';
   };
 
+  const gridSize = 20;
+
   return (
-    <div className="w-full h-[600px]" ref={containerRef}>
-      <div className="w-full h-full p-4 relative bg-white rounded-lg shadow">
-        {/* Track Selection */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          {specialtyTracks.map((track) => (
-            <button
-              key={track.code}
-              onClick={() =>
-                setSelectedTrack(selectedTrack === track.code ? null : track.code)
-              }
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                selectedTrack === track.code ? 'text-white' : 'text-gray-700'
-              }`}
-              style={{
-                backgroundColor: selectedTrack === track.code ? track.color : '#f3f4f6',
-              }}
-            >
-              {track.name}
-            </button>
-          ))}
-        </div>
+    <div className="w-full h-full bg-olive-50 relative" ref={containerRef}>
+      {/* Topographical Background */}
+      <div className="absolute inset-0 opacity-10">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div 
+            key={i} 
+            className="absolute w-full h-full"
+            style={{
+              background: `radial-gradient(circle at ${Math.random() * 100}% ${Math.random() * 100}%, 
+                          #4A5F31 0%, transparent ${20 + Math.random() * 40}%)`
+            }}
+          />
+        ))}
+      </div>
 
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          {/* Paths */}
-          {paths.map((path, index) => {
-            const isHighlighted = selectedTrack && path.track === selectedTrack;
-            const pathColor = path.isCore
-              ? '#ef4444'
-              : isHighlighted
-              ? getTrackColor(path.track)
-              : '#e5e7eb';
+      {/* Compass Rose */}
+      <div className="absolute top-2 right-2 bg-olive-100 rounded-full p-1.5 shadow-lg border-2 border-olive-800">
+        <Compass className="w-6 h-6 text-olive-800" />
+      </div>
 
-            return (
+      {/* Track Selection */}
+      <div className="absolute top-2 left-2 space-y-1.5 z-10">
+        {specialtyTracks.map((track) => (
+          <button
+            key={track.code}
+            onClick={() => setSelectedTrack(selectedTrack === track.code ? null : track.code)}
+            className={`px-3 py-1.5 w-36 border-2 font-military tracking-wider text-xs transition-all
+                      ${selectedTrack === track.code 
+                        ? 'bg-olive-800 text-olive-50 border-olive-900 shadow-inner' 
+                        : 'bg-olive-100 text-olive-800 border-olive-800 hover:bg-olive-200 shadow-sm hover:shadow-md'}`}
+            style={{
+              clipPath: 'polygon(0 0, 100% 0, 95% 100%, 5% 100%)'
+            }}
+          >
+            {track.name}
+          </button>
+        ))}
+      </div>
+
+      <svg 
+        className="w-full h-full"
+        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: 'rgba(74, 95, 49, 0.05)' }}
+      >
+        {/* Grid Pattern */}
+        <defs>
+          <pattern 
+            id="grid" 
+            width={gridSize} 
+            height={gridSize} 
+            patternUnits="userSpaceOnUse"
+          >
+            <path 
+              d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`} 
+              fill="none" 
+              stroke="#4A5F31" 
+              strokeWidth="0.5" 
+              strokeOpacity="0.2"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        {/* Paths */}
+        {paths.map((path, index) => {
+          const isHighlighted = selectedTrack && path.track === selectedTrack;
+          const pathColor = path.isCore ? '#4A5F31' : isHighlighted ? getTrackColor(path.track) : '#8B4513';
+          
+          return (
+            <g key={`path-${index}`}>
               <path
-                key={`path-${index}`}
-                d={`M ${path.start.x} ${path.start.y} 
-                    C ${path.start.x} ${path.start.y + 50},
-                      ${path.end.x} ${path.end.y - 50},
-                      ${path.end.x} ${path.end.y}`}
+                d={`M ${path.start.x} ${path.start.y} C ${path.start.x + 50} ${path.start.y}, 
+                   ${path.end.x - 50} ${path.end.y}, ${path.end.x} ${path.end.y}`}
                 stroke={pathColor}
-                strokeWidth={path.isCore ? '4' : '2'}
+                strokeWidth={path.isCore ? 4 : 2}
+                strokeDasharray={path.isCore ? "" : "5,5"}
                 fill="none"
                 className="transition-all duration-300"
               />
-            );
-          })}
+            </g>
+          );
+        })}
 
-          {/* Nodes */}
-          {nodePositions.map((node, index) => {
-            const isHighlighted = selectedTrack && node.track === selectedTrack;
-            const nodeColor = node.isCore
-              ? '#ef4444'
-              : isHighlighted
-              ? getTrackColor(node.track)
-              : '#f3f4f6';
-
-            return (
-              <g
-                key={`node-${index}`}
-                transform={`translate(${node.x},${node.y})`}
-                onClick={() =>
-                  setSelectedNode(selectedNode?.name === node.name ? null : node)
+        {/* Nodes */}
+        {nodePositions.map((node, index) => {
+          const isHighlighted = selectedTrack && node.track === selectedTrack;
+          const nodeColor = node.isCore ? '#4A5F31' : isHighlighted ? getTrackColor(node.track) : '#8B4513';
+          const isSelected = selectedNode?.name === node.name;
+          
+          return (
+            <g
+              key={`node-${index}`}
+              transform={`translate(${node.x},${node.y})`}
+              className="cursor-pointer transition-transform hover:scale-110"
+              onClick={() => setSelectedNode(isSelected ? null : node)}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setSelectedNode(isSelected ? null : node);
                 }
-                className="cursor-pointer"
+              }}
+              aria-pressed={isSelected}
+              aria-label={`Select course ${node.name || node.courseCode}`}
+            >
+              <circle
+                r={NODE_RADIUS}
+                fill={isSelected ? nodeColor : '#F4F6E9'}
+                stroke={nodeColor}
+                strokeWidth={node.isCore ? 3 : 2}
+                className="transition-all duration-300"
+              />
+              <text
+                y={20}
+                textAnchor="middle"
+                className={`text-xs font-military ${isSelected ? 'fill-olive-800' : 'fill-olive-700'}`}
+                style={{ textTransform: 'uppercase' }}
               >
-                <circle
-                  r={NODE_RADIUS}
-                  fill={selectedNode?.name === node.name ? nodeColor : '#fff'}
-                  stroke={nodeColor}
-                  strokeWidth={node.isCore ? '3' : '2'}
-                  className="transition-colors duration-300"
-                />
-
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className={`text-xs font-medium ${
-                    selectedNode?.name === node.name ? 'fill-white' : 'fill-gray-700'
-                  } pointer-events-none`}
-                >
-                  {node.name || node.courseCode}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Info Panel */}
-        {selectedNode && (
-          <CourseDetails selectedNode={selectedNode} specialtyTracks={specialtyTracks} />
-        )}
-      </div>
+                {node.name || node.courseCode}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 };

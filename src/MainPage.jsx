@@ -1,10 +1,13 @@
-// MainPage.js
+// src/components/MainPage.jsx
 import { useState, useEffect } from 'react';
 import NetworkPath from './components/NetworkPath';
+import CourseDetails from './components/CourseDetails';
+import './components/css/MainPage.css'; // Ensure you have this CSS file
 
 function MainPage() {
   const [selectedTradeCode, setSelectedTradeCode] = useState(null);
   const [trades, setTrades] = useState([]);
+  const [selectedNode, setSelectedNode] = useState(null); // Lifted state
 
   // Fetch available trades from the server
   useEffect(() => {
@@ -25,35 +28,52 @@ function MainPage() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Career Progression Paths</h1>
+    <div className="mainpage-container">
+      <h1 className="mainpage-heading">Career Progression Paths</h1>
 
       {/* Trade Selection Buttons */}
-      <div className="mb-6 flex flex-wrap gap-4">
+      <div className="trade-buttons-container">
         {trades.map((trade) => (
           <button
             key={trade.code}
             onClick={() => setSelectedTradeCode(trade.code)}
-            className={`px-4 py-2 rounded-md font-semibold transition-colors ${
-              selectedTradeCode === trade.code
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-red-400 hover:text-white'
+            className={`trade-button ${
+              selectedTradeCode === trade.code ? 'selected' : 'unselected'
             }`}
+            aria-pressed={selectedTradeCode === trade.code}
           >
             Load {trade.name} Path
           </button>
         ))}
       </div>
 
-      {/* NetworkPath Component */}
-      <div className="mt-8">
-        {selectedTradeCode ? (
-          <NetworkPath tradeCode={selectedTradeCode} />
-        ) : (
-          <p className="text-gray-500">
-            Please select a career path to load the network visualization.
-          </p>
-        )}
+      {/* Content Area: NetworkPath and CourseDetails */}
+      <div className="content-area">
+        <div className="networkpath-wrapper">
+          {selectedTradeCode ? (
+            <NetworkPath
+              tradeCode={selectedTradeCode}
+              selectedNode={selectedNode}
+              setSelectedNode={setSelectedNode}
+            />
+          ) : (
+            <p className="placeholder-text">
+              Please select a career path to load the network visualization.
+            </p>
+          )}
+        </div>
+        <div className="coursedetails-wrapper">
+          {selectedNode ? (
+            <CourseDetails
+              selectedNode={selectedNode}
+              specialtyTracks={
+                trades.find((trade) => trade.code === selectedTradeCode)?.specialtyTracks || []
+              }
+            />
+          ) : (
+            <div className="placeholder-text">Select a course to see details here.</div>
+          )}
+        </div>
       </div>
     </div>
   );

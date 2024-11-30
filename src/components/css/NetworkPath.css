@@ -1,0 +1,91 @@
+/* Add these custom CSS variables and classes */
+
+:root {
+  --color-olive-50: #F4F6E9;
+  --color-olive-100: #E5E9D3;
+  --color-olive-200: #D1D8B9;
+  --color-olive-800: #4A5F31;
+}
+
+@font-face {
+  font-family: 'Military';
+  src: url('path-to-military-font.woff2') format('woff2');
+  /* You can use fonts like "Special Elite" or "Black Ops One" from Google Fonts as alternatives */
+}
+
+.font-military {
+  font-family: 'Military', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Custom Background Pattern */
+.bg-olive-50 {
+  background-color: var(--color-olive-50);
+  background-image: 
+    linear-gradient(rgba(74, 95, 49, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 95, 49, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Contour Line Effect */
+.contour-lines {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(74, 95, 49, 0.05) 2px,
+    rgba(74, 95, 49, 0.05) 4px
+  );
+}
+
+/* Node Hover Effects */
+.node-group:hover circle {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Path Animation */
+.path-transition {
+  transition: all 0.3s ease;
+}
+
+/* Track Button Styles */
+.track-button {
+  background: var(--color-olive-100);
+  border: 2px solid var(--color-olive-800);
+  color: var(--color-olive-800);
+  text-transform: uppercase;
+  font-family: 'Military', monospace;
+  letter-spacing: 0.1em;
+  box-shadow: 2px 2px 0 var(--color-olive-800);
+  transition: all 0.2s ease;
+}
+
+.track-button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--color-olive-800);
+}
+
+.track-button.selected {
+  background: var(--color-olive-800);
+  color: var(--color-olive-50);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading State */
+.network-path-loading {
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      var(--color-olive-50),
+      var(--color-olive-50) 10px,
+      var(--color-olive-100) 10px,
+      var(--color-olive-100) 20px
+    );
+}
+
+.loading-text {
+  font-family: 'Military', monospace;
+  color: var(--color-olive-800);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}

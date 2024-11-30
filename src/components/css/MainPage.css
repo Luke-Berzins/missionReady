@@ -1,0 +1,171 @@
+/* Custom CSS Variables */
+:root {
+    --color-olive-50: #F4F6E9;
+    --color-olive-100: #E5E9D3;
+    --color-olive-200: #D1D8B9;
+    --color-olive-300: #B7C397;
+    --color-olive-600: #718355;
+    --color-olive-700: #5F7C3A;
+    --color-olive-800: #4A5F31;
+    --color-olive-900: #374824;
+  }
+  
+/* MainPage.css */
+.mainpage-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--color-olive-50);
+  }
+  
+  .content-area {
+    flex: 1;
+    display: flex;
+    min-height: 0; /* This is crucial for nested flex scrolling */
+  }
+  
+  .networkpath-wrapper {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+  
+  .coursedetails-wrapper {
+    width: 320px;
+    height: 100%; /* Full height */
+    overflow-y: auto;
+    background: var(--color-olive-100);
+    border-left: 2px solid var(--color-olive-800);
+  }
+  /* Trade Button Container */
+  .trade-buttons-container {
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+    background: var(--color-olive-50);
+    border-bottom: 2px solid var(--color-olive-800);
+  }
+  
+  /* Trade Button Styles */
+  .trade-button {
+    padding: 0.5rem 1.25rem;
+    font-family: 'Military', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--color-olive-100);
+    border: 2px solid var(--color-olive-800);
+    color: var(--color-olive-800);
+    transition: all 0.2s;
+    cursor: pointer;
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+    font-size: 0.875rem;
+    box-shadow: 2px 2px 0 var(--color-olive-800);
+  }
+  
+  .trade-button:hover {
+    background: var(--color-olive-200);
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--color-olive-800);
+  }
+  
+  .trade-button.selected {
+    background: var(--color-olive-800);
+    color: var(--color-olive-50);
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Content Area Layout */
+  .content-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Course Details Content */
+  .course-details {
+    padding: 1rem;
+    font-family: 'Military', monospace;
+  }
+  
+  .course-details h2 {
+    color: var(--color-olive-800);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid var(--color-olive-800);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .course-section {
+    background: var(--color-olive-50);
+    border: 2px solid var(--color-olive-800);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .course-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--color-olive-800);
+    color: var(--color-olive-50);
+    margin: 0.5rem 0;
+  }
+  
+  /* Placeholder States */
+  .placeholder-text {
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-olive-600);
+    font-family: 'Military', monospace;
+    letter-spacing: 0.05em;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-olive-50),
+      var(--color-olive-50) 10px,
+      var(--color-olive-100) 10px,
+      var(--color-olive-100) 20px
+    );
+  }
+  
+  .mainpage-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--color-olive-50);
+  }
+  
+  .mainpage-heading {
+    padding: 0.75rem 1.5rem;
+    font-family: 'Military', monospace;
+    color: var(--color-olive-800);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--color-olive-800);
+    background: var(--color-olive-100);
+    margin: 0;
+  }
+  
+  .content-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden; /* Prevent overall page scroll */
+    min-height: 0; /* Critical for nested flex scrolling */
+  }
+  
+  .networkpath-wrapper {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0; /* Critical for nested flex scrolling */
+  }
+  
+  .coursedetails-wrapper {
+    width: 320px;
+    border-left: 2px solid var(--color-olive-800);
+    background: var(--color-olive-100);
+    overflow-y: auto; /* Enable scrolling */
+    min-height: 0; /* Critical for nested flex scrolling */
+  }

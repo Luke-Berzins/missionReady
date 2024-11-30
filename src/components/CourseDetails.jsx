@@ -1,6 +1,7 @@
-// CourseDetails.js
+// src/components/CourseDetails.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
+import './css/CourseDetails.css';
 
 const CourseDetails = ({ selectedNode, specialtyTracks }) => {
   if (!selectedNode) return null;
@@ -8,24 +9,45 @@ const CourseDetails = ({ selectedNode, specialtyTracks }) => {
   const { name, courseCode, isCore, rank, hours, track } = selectedNode;
 
   // Find the track name if the course is part of a specialty track
-  const trackName = !isCore
-    ? specialtyTracks.find((t) => t.code === track)?.name
+  const trackDetails = !isCore
+    ? specialtyTracks.find((t) => t.code === track)
     : null;
+  const trackName = trackDetails?.name;
+  const trackColor = trackDetails?.color || '#6b7280'; // Default to gray if no color
 
   return (
-    <div className="absolute bottom-4 left-4 bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-      <h3 className="font-bold text-sm text-gray-200">
+    <div
+      className="course-details-panel"
+      style={{ borderLeft: `4px solid ${isCore ? '#ef4444' : trackColor}` }} // Accent border
+    >
+      <h3 className="course-details-title">
         {name || courseCode}
       </h3>
+      <p className="course-details-subtitle">
+        {isCore ? 'Core Course' : `${trackName} Track`}
+      </p>
+
       {isCore ? (
         <>
-          <p className="text-sm text-gray-400">Rank: {rank}</p>
-          <p className="text-sm text-red-400">Required Hours: {hours}</p>
+          <div className="course-details-info">
+            <span className="info-label">Rank:</span>
+            <span className="info-value">{rank}</span>
+          </div>
+          <div className="course-details-info">
+            <span className="info-label">Required Hours:</span>
+            <span className="info-value">{hours}</span>
+          </div>
         </>
       ) : (
-        <p className="text-sm text-gray-400">
-          {trackName} Track
-        </p>
+        <div className="course-details-info">
+          <span className="info-label">Track:</span>
+          <span
+            className="info-value track-name"
+            style={{ color: trackColor }}
+          >
+            {trackName}
+          </span>
+        </div>
       )}
     </div>
   );

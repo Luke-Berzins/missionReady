@@ -1,0 +1,214 @@
+/* CourseDetails.css */
+:root {
+  --color-olive-50: #F4F6E9;
+  --color-olive-100: #E5E9D3;
+  --color-olive-200: #D1D8B9;
+  --color-olive-700: #5F7C3A;
+  --color-olive-800: #4A5F31;
+}
+
+/* CourseDetails.css */
+.course-details-panel {
+  padding: 1.5rem;
+  background-color: var(--color-olive-50);
+}
+
+.course-details-title {
+  font-family: 'Military', monospace;
+  color: var(--color-olive-800);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid currentColor;
+}
+
+.course-details-subtitle {
+  font-family: 'Military', monospace;
+  color: var(--color-olive-700);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+
+.course-details-info {
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid var(--color-olive-800);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+}
+
+.info-label {
+  font-family: 'Military', monospace;
+  display: block;
+  color: var(--color-olive-800);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-family: 'Military', monospace;
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-olive-800);
+}
+
+.track-name {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Scrollbar styling */
+.coursedetails-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.coursedetails-wrapper::-webkit-scrollbar-track {
+  background: var(--color-olive-100);
+}
+
+.coursedetails-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-olive-700);
+  border-radius: 4px;
+}
+
+.coursedetails-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-olive-800);
+}
+
+.course-details-panel {
+  background-color: var(--color-olive-50);
+  padding: 1.5rem;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* Add military pattern to background */
+.course-details-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(45deg, 
+      rgba(74, 95, 49, 0.05) 25%, 
+      transparent 25%, 
+      transparent 75%, 
+      rgba(74, 95, 49, 0.05) 75%, 
+      rgba(74, 95, 49, 0.05)),
+    linear-gradient(45deg, 
+      rgba(74, 95, 49, 0.05) 25%, 
+      transparent 25%, 
+      transparent 75%, 
+      rgba(74, 95, 49, 0.05) 75%, 
+      rgba(74, 95, 49, 0.05));
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.course-details-title {
+  font-family: 'Military', monospace;
+  color: var(--color-olive-800);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid currentColor;
+  position: relative;
+  z-index: 1;
+}
+
+.course-details-subtitle {
+  font-family: 'Military', monospace;
+  color: var(--color-olive-700);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.course-details-info {
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid var(--color-olive-800);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+  /* Military-style angled corners */
+  clip-path: polygon(
+    0 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+}
+
+.info-label {
+  font-family: 'Military', monospace;
+  display: block;
+  color: var(--color-olive-800);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-family: 'Military', monospace;
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-olive-800);
+}
+
+.track-name {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Custom scrollbar */
+.course-details-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.course-details-panel::-webkit-scrollbar-track {
+  background: var(--color-olive-100);
+}
+
+.course-details-panel::-webkit-scrollbar-thumb {
+  background: var(--color-olive-700);
+  border-radius: 4px;
+}
+
+.course-details-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-olive-800);
+}
