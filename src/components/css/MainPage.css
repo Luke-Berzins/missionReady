@@ -1,3 +1,5 @@
+/* src/components/css/MainPage.css */
+
 /* Custom CSS Variables */
 :root {
     --color-olive-50: #F4F6E9;
@@ -10,34 +12,39 @@
     --color-olive-900: #374824;
   }
   
-/* MainPage.css */
-.mainpage-container {
+  /* Font Face */
+  @font-face {
+    font-family: 'Military';
+    src: url('path-to-military-font.woff2') format('woff2');
+    /* Alternatively, use Google Fonts like "Special Elite" or "Black Ops One" */
+  }
+  
+  .font-military {
+    font-family: 'Military', monospace;
+    letter-spacing: 0.05em;
+  }
+  
+  /* Main Container */
+  .mainpage-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     background: var(--color-olive-50);
   }
   
-  .content-area {
-    flex: 1;
-    display: flex;
-    min-height: 0; /* This is crucial for nested flex scrolling */
-  }
-  
-  .networkpath-wrapper {
-    flex: 1;
-    position: relative;
-    min-height: 0;
-  }
-  
-  .coursedetails-wrapper {
-    width: 320px;
-    height: 100%; /* Full height */
-    overflow-y: auto;
+  /* Heading */
+  .mainpage-heading {
+    padding: 0.75rem 1.5rem;
+    font-family: 'Military', monospace;
+    color: var(--color-olive-800);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--color-olive-800);
     background: var(--color-olive-100);
-    border-left: 2px solid var(--color-olive-800);
+    margin: 0;
   }
-  /* Trade Button Container */
+  
+  /* Trade Buttons Container */
   .trade-buttons-container {
     padding: 0.75rem 1.5rem;
     display: flex;
@@ -78,44 +85,28 @@
   .content-area {
     flex: 1;
     display: flex;
-    overflow: hidden;
+    overflow: hidden; /* Prevent overall page scroll */
+    min-height: 0; /* Critical for nested flex scrolling */
+  }
+  
+  /* NetworkPath Wrapper */
+  .networkpath-wrapper {
+    flex: 1;
+    overflow: auto; /* Enable scrolling */
     position: relative;
-  }
-
-  /* Course Details Content */
-  .course-details {
-    padding: 1rem;
-    font-family: 'Military', monospace;
+    min-height: 0; /* Critical for nested flex scrolling */
   }
   
-  .course-details h2 {
-    color: var(--color-olive-800);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    border-bottom: 2px solid var(--color-olive-800);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+  /* CourseDetails Wrapper */
+  .coursedetails-wrapper {
+    width: 320px;
+    border-left: 2px solid var(--color-olive-800);
+    background: var(--color-olive-100);
+    overflow-y: auto; /* Enable scrolling */
+    min-height: 0; /* Critical for nested flex scrolling */
   }
   
-  .course-section {
-    background: var(--color-olive-50);
-    border: 2px solid var(--color-olive-800);
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .course-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: var(--color-olive-800);
-    color: var(--color-olive-50);
-    margin: 0.5rem 0;
-  }
-  
-  /* Placeholder States */
+  /* Placeholder Text */
   .placeholder-text {
     padding: 2rem;
     text-align: center;
@@ -131,41 +122,24 @@
     );
   }
   
-  .mainpage-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background: var(--color-olive-50);
+  /* Scrollbar Styling for CourseDetails */
+  .coursedetails-wrapper::-webkit-scrollbar {
+    width: 8px;
   }
   
-  .mainpage-heading {
-    padding: 0.75rem 1.5rem;
-    font-family: 'Military', monospace;
-    color: var(--color-olive-800);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--color-olive-800);
+  .coursedetails-wrapper::-webkit-scrollbar-track {
     background: var(--color-olive-100);
-    margin: 0;
   }
   
-  .content-area {
-    flex: 1;
-    display: flex;
-    overflow: hidden; /* Prevent overall page scroll */
-    min-height: 0; /* Critical for nested flex scrolling */
+  .coursedetails-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-olive-700);
+    border-radius: 4px;
   }
   
-  .networkpath-wrapper {
-    flex: 1;
-    overflow: hidden;
-    min-height: 0; /* Critical for nested flex scrolling */
+  .coursedetails-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-olive-800);
   }
   
-  .coursedetails-wrapper {
-    width: 320px;
-    border-left: 2px solid var(--color-olive-800);
-    background: var(--color-olive-100);
-    overflow-y: auto; /* Enable scrolling */
-    min-height: 0; /* Critical for nested flex scrolling */
-  }
+  /* Additional Styles (Optional) */
+  /* Add your other styles here, ensuring no duplicates exist */
+  

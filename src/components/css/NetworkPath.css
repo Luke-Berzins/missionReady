@@ -1,16 +1,29 @@
-/* Add these custom CSS variables and classes */
+/* src/components/css/NetworkPath.css */
 
+/* Custom CSS Variables */
 :root {
   --color-olive-50: #F4F6E9;
   --color-olive-100: #E5E9D3;
   --color-olive-200: #D1D8B9;
+  --color-olive-300: #B7C397;
+  --color-olive-600: #718355;
+  --color-olive-700: #5F7C3A;
   --color-olive-800: #4A5F31;
+  --color-olive-900: #374824;
+
+  /* Button Variables */
+  --btn-padding-y: 0.5rem; /* Adjusted for fixed height */
+  --btn-padding-x: 1rem;
+  --btn-border-radius: 8px;
+  --btn-font-size-min: 0.75rem;
+  --btn-font-size: 1rem;
 }
 
+/* Font Face */
 @font-face {
   font-family: 'Military';
   src: url('path-to-military-font.woff2') format('woff2');
-  /* You can use fonts like "Special Elite" or "Black Ops One" from Google Fonts as alternatives */
+  /* Alternatively, use Google Fonts like "Special Elite" or "Black Ops One" */
 }
 
 .font-military {
@@ -18,74 +31,156 @@
   letter-spacing: 0.05em;
 }
 
-/* Custom Background Pattern */
-.bg-olive-50 {
-  background-color: var(--color-olive-50);
-  background-image: 
-    linear-gradient(rgba(74, 95, 49, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(74, 95, 49, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
+/* Track Selection Container */
+.track-selection-container {
+  position: sticky; /* Changed from absolute to sticky */
+  top: 0; /* Stick to the top of the scrollable content */
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Vertically center buttons */
+  padding: 0.5rem 1rem; /* Adjust padding as needed */
+  background: var(--color-olive-100); /* Background for visibility */
+  overflow-x: auto; /* Enable horizontal scrolling if needed */
+  white-space: nowrap; /* Prevent buttons from wrapping to next line */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
+  z-index: 10; /* Ensure it's above other elements */
 }
 
-/* Contour Line Effect */
-.contour-lines {
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 2px,
-    rgba(74, 95, 49, 0.05) 2px,
-    rgba(74, 95, 49, 0.05) 4px
-  );
+/* Hide scrollbar for WebKit browsers */
+.track-selection-container::-webkit-scrollbar {
+  display: none;
 }
 
-/* Node Hover Effects */
-.node-group:hover circle {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-/* Path Animation */
-.path-transition {
-  transition: all 0.3s ease;
+/* Hide scrollbar for other browsers */
+.track-selection-container {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Track Button Styles */
 .track-button {
-  background: var(--color-olive-100);
-  border: 2px solid var(--color-olive-800);
-  color: var(--color-olive-800);
-  text-transform: uppercase;
+  position: relative; /* For tooltip positioning */
+  flex: 0 0 auto; /* Prevent buttons from stretching */
+  height: 40px; /* Fixed height */
+  padding: 0 1rem; /* Horizontal padding */
+  margin-right: 0.5rem; /* Space between buttons */
   font-family: 'Military', monospace;
+  text-transform: uppercase;
   letter-spacing: 0.1em;
-  box-shadow: 2px 2px 0 var(--color-olive-800);
-  transition: all 0.2s ease;
+  border: 2px solid var(--color-olive-800);
+  border-radius: 8px;
+  background: var(--color-olive-100);
+  color: var(--color-olive-800);
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s, transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Hide overflowing text */
+  white-space: nowrap; /* Prevent text from wrapping */
+  text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+  font-size: clamp(var(--btn-font-size-min), 1vw, var(--btn-font-size)); /* Responsive font size */
 }
 
+/* Hover State */
 .track-button:hover {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--color-olive-800);
+  background: var(--color-olive-200);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* Active (Pressed) State */
+.track-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Selected State */
 .track-button.selected {
   background: var(--color-olive-800);
   color: var(--color-olive-50);
-  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Loading State */
-.network-path-loading {
-  background: 
-    repeating-linear-gradient(
-      45deg,
-      var(--color-olive-50),
-      var(--color-olive-50) 10px,
-      var(--color-olive-100) 10px,
-      var(--color-olive-100) 20px
-    );
+/* Focus State for Accessibility */
+.track-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 95, 49, 0.5); /* Olive-colored focus ring */
 }
 
-.loading-text {
-  font-family: 'Military', monospace;
-  color: var(--color-olive-800);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+/* Tooltip Styles */
+.track-button .tooltip-text {
+  visibility: hidden;
+  width: max-content; /* Adjust width based on content */
+  background-color: var(--color-olive-800);
+  color: var(--color-olive-50);
+  text-align: center;
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  position: absolute;
+  z-index: 20;
+  bottom: 110%; /* Position above the button */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap; /* Prevent tooltip text from wrapping */
+  font-size: 0.75rem;
+}
+
+/* Tooltip Arrow */
+.track-button .tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: 100%; /* At the bottom of the tooltip */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--color-olive-800) transparent transparent transparent;
+}
+
+/* Show Tooltip on Hover */
+.track-button:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Scrollable Content Area */
+.scrollable-content {
+  position: absolute;
+  top: 60px; /* Height of the track-selection-container plus some margin */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto; /* Enable scrolling */
+}
+
+@media (max-width: 768px) {
+  .scrollable-content {
+    top: 50px; /* Adjust based on track-button height */
+  }
+
+  .track-button {
+    height: 35px;
+    padding: 0 0.8rem;
+    font-size: clamp(0.7rem, 1vw, 0.9rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .scrollable-content {
+    top: 45px; /* Adjust based on track-button height */
+  }
+
+  .track-button {
+    height: 30px;
+    padding: 0 0.6rem;
+    font-size: clamp(0.6rem, 0.8vw, 0.8rem);
+  }
+}
+
+/* Optional: Remove right margin from last button */
+.track-selection-container .track-button:last-child {
+  margin-right: 0;
 }

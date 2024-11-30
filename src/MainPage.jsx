@@ -2,12 +2,12 @@
 import { useState, useEffect } from 'react';
 import NetworkPath from './components/NetworkPath';
 import CourseDetails from './components/CourseDetails';
-import './components/css/MainPage.css'; // Ensure you have this CSS file
+import './components/css/MainPage.css'; // Ensure the path is correct
 
 function MainPage() {
   const [selectedTradeCode, setSelectedTradeCode] = useState(null);
   const [trades, setTrades] = useState([]);
-  const [selectedNode, setSelectedNode] = useState(null); // Lifted state
+  const [selectedNode, setSelectedNode] = useState(null);
 
   // Fetch available trades from the server
   useEffect(() => {
