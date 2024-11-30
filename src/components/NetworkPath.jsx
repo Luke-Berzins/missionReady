@@ -1,9 +1,11 @@
+// NetworkPath.js
 import React, { useState, useEffect, useRef } from 'react';
+import CourseDetails from './CourseDetails'; // Adjust the path based on your project structure
 
 const DEFAULT_WIDTH = 1000;
 const DEFAULT_HEIGHT = 600;
 const NODE_RADIUS = 35;
-const VERTICAL_OFFSET = 120;
+const HORIZONTAL_OFFSET = 120;
 const API_URL = 'http://localhost:3000';
 
 const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
@@ -50,38 +52,53 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
 
   if (!branchData) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading training path data...</p>
+      <div className="w-full h-[600px] flex items-center justify-center bg-gray-900 text-gray-200">
+        <p className="text-lg">Loading training path data...</p>
       </div>
     );
   }
 
   const { coreCourses, specialtyTracks } = branchData;
 
+  const getRankZones = () => {
+    const numberOfRanks = 4; // Adjust based on actual ranks
+    const rankHeight = dimensions.height / numberOfRanks;
+
+    return specialtyTracks.map((track, index) => ({
+      name: track.minimumRank,
+      color: track.color,
+      startY: index * rankHeight,
+      endY: (index + 1) * rankHeight
+    }));
+  };
+
   const calculatePositions = () => {
     const { width, height } = dimensions;
-    const horizontalSpacing = width / (coreCourses.length + 1);
-    
+    const verticalSpacing = height / (coreCourses.length + 1);
+    const horizontalCenter = width / 2;
+
+    // Calculate core path positions
     const corePositions = coreCourses.map((course, index) => ({
       ...course,
-      x: horizontalSpacing * (index + 1),
-      y: height / 2,
+      x: horizontalCenter, // Center horizontally
+      y: verticalSpacing * (index + 1), // Evenly spaced vertically
       isCore: true
     }));
 
+    // Calculate branch positions
     const branchPositions = coreCourses.flatMap((coreCourse, coreIndex) => {
-      const relevantTracks = specialtyTracks.filter(track => 
-        track.minimumRank === coreCourse.rank
+      const relevantTracks = specialtyTracks.filter(
+        (track) => track.minimumRank === coreCourse.rank
       );
 
       return relevantTracks.flatMap((track, trackIndex) => {
-        const startX = horizontalSpacing * (coreIndex + 1);
-        const direction = trackIndex % 2 === 0 ? 1 : -1;
+        const startY = verticalSpacing * (coreIndex + 1);
+        const direction = trackIndex % 2 === 0 ? 1 : -1; // Alternate left/right for branches
 
         return track.courses.map((course, seqIndex) => ({
           name: course,
-          x: startX + (horizontalSpacing * 0.8 * (seqIndex + 1)),
-          y: height/2 + (direction * VERTICAL_OFFSET * (seqIndex + 1)),
+          x: horizontalCenter + (direction * HORIZONTAL_OFFSET * (seqIndex + 1)), // Offset left or right
+          y: startY + (verticalSpacing * 0.5 * (seqIndex + 1)), // Slight vertical offset for better spacing
           track: track.code,
           isCore: false,
           branchStartIndex: coreIndex
@@ -94,40 +111,28 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
 
   const generatePaths = (nodePositions) => {
     const paths = [];
-    
-    // Core paths
+
+    // Core paths (connect vertically)
     for (let i = 0; i < coreCourses.length - 1; i++) {
-      const start = nodePositions.find(n => n.courseCode === coreCourses[i].courseCode);
-      const end = nodePositions.find(n => n.courseCode === coreCourses[i + 1].courseCode);
+      const start = nodePositions.find((n) => n.courseCode === coreCourses[i].courseCode);
+      const end = nodePositions.find((n) => n.courseCode === coreCourses[i + 1].courseCode);
       if (start && end) {
-        paths.push({
-          start,
-          end,
-          isCore: true
-        });
+        paths.push({ start, end, isCore: true });
       }
     }
 
     // Branch paths
-    specialtyTracks.forEach(track => {
-      const trackNodes = nodePositions.filter(n => n.track === track.code);
+    specialtyTracks.forEach((track) => {
+      const trackNodes = nodePositions.filter((n) => n.track === track.code);
       trackNodes.forEach((node, index) => {
         if (index > 0) {
-          paths.push({
-            start: trackNodes[index - 1],
-            end: node,
-            track: track.code
-          });
+          paths.push({ start: trackNodes[index - 1], end: node, track: track.code });
         } else {
-          const coreNode = nodePositions.find(n => 
-            n.isCore && n.rank === track.minimumRank
+          const coreNode = nodePositions.find(
+            (n) => n.isCore && n.rank === track.minimumRank
           );
           if (coreNode) {
-            paths.push({
-              start: coreNode,
-              end: node,
-              track: track.code
-            });
+            paths.push({ start: coreNode, end: node, track: track.code });
           }
         }
       });
@@ -138,31 +143,35 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
 
   const nodePositions = calculatePositions();
   const paths = generatePaths(nodePositions);
+  const rankZones = getRankZones();
 
   const getTrackColor = (trackCode) => {
     const track = specialtyTracks.find(t => t.code === trackCode);
-    return track ? track.color : '#e5e7eb';
+    return track ? track.color : '#6b7280';
   };
 
   return (
-    <div className="w-full h-[600px]" ref={containerRef}>
-      <div className="w-full h-full p-4 relative bg-white rounded-lg shadow">
+    <div
+      className="w-full h-[600px] bg-gray-900 text-gray-100 font-mono relative"
+      ref={containerRef}
+    >
+      <div className="w-full h-full relative border border-gray-600 rounded-lg p-4">
         {/* Track Selection */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <div className="absolute top-4 right-4 flex gap-2">
           {specialtyTracks.map((track) => (
             <button
               key={track.code}
               onClick={() => setSelectedTrack(
                 selectedTrack === track.code ? null : track.code
               )}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                selectedTrack === track.code ? 'text-white' : 'text-gray-700'
-              }`}
+              className="px-4 py-2 rounded text-sm font-bold transition-colors border border-gray-700"
               style={{
-                backgroundColor: selectedTrack === track.code ? track.color : '#f3f4f6'
+                backgroundColor: selectedTrack === track.code ? track.color : '#4a4a4a',
+                color: selectedTrack === track.code ? '#fff' : '#e5e7eb'
               }}
+              aria-pressed={selectedTrack === track.code}
             >
-              {track.name}
+              {track.name} Track
             </button>
           ))}
         </div>
@@ -173,18 +182,40 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
           preserveAspectRatio="xMidYMid meet"
         >
+          {/* Rank Zones */}
+          {rankZones.map((zone, index) => (
+            <g key={`zone-${index}`}>
+              <rect
+                x={0}
+                y={zone.startY}
+                width={dimensions.width}
+                height={zone.endY - zone.startY}
+                fill={zone.color}
+              />
+              <text
+                x={dimensions.width - 10}
+                y={(zone.startY + zone.endY) / 2}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="fill-gray-200 text-sm font-bold"
+              >
+                {zone.name}
+              </text>
+            </g>
+          ))}
+
           {/* Paths */}
           {paths.map((path, index) => {
             const isHighlighted = selectedTrack && path.track === selectedTrack;
             const pathColor = path.isCore ? "#ef4444" : 
-                            (isHighlighted ? getTrackColor(path.track) : "#e5e7eb");
+                              (isHighlighted ? getTrackColor(path.track) : "#6b7280");
             
             return (
               <path
                 key={`path-${index}`}
                 d={`M ${path.start.x} ${path.start.y} 
-                    C ${path.start.x + 50} ${path.start.y},
-                      ${path.end.x - 50} ${path.end.y},
+                    C ${path.start.x + (path.isCore ? 0 : 50)} ${path.start.y}, 
+                      ${path.end.x - (path.isCore ? 0 : 50)} ${path.end.y},
                       ${path.end.x} ${path.end.y}`}
                 stroke={pathColor}
                 strokeWidth={path.isCore ? "4" : "2"}
@@ -197,8 +228,8 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
           {/* Nodes */}
           {nodePositions.map((node, index) => {
             const isHighlighted = selectedTrack && node.track === selectedTrack;
-            const nodeColor = node.isCore ? "#ef4444" : 
-                            (isHighlighted ? getTrackColor(node.track) : "#f3f4f6");
+            const nodeColor = node.isCore ? "#1f2937" :
+                              (isHighlighted ? getTrackColor(node.track) : "#4a4a4a");
             
             return (
               <g
@@ -211,18 +242,16 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
               >
                 <circle
                   r={NODE_RADIUS}
-                  fill={selectedNode?.name === node.name ? nodeColor : '#fff'}
-                  stroke={nodeColor}
+                  fill={selectedNode?.name === node.name ? nodeColor : '#1f2937'}
+                  stroke={node.isCore ? '#ef4444' : getTrackColor(node.track)}
                   strokeWidth={node.isCore ? "3" : "2"}
-                  className="transition-colors duration-300"
+                  className={`transition-colors duration-300 ${selectedNode?.name === node.name ? 'scale-110' : 'scale-100'}`}
                 />
                 
                 <text
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className={`text-xs font-medium ${
-                    selectedNode?.name === node.name ? "fill-white" : "fill-gray-700"
-                  } pointer-events-none`}
+                  className="text-xs font-bold fill-gray-200 pointer-events-none"
                 >
                   {node.name || node.courseCode}
                 </text>
@@ -232,21 +261,7 @@ const NetworkPath = ({ branchCode = 'FIRE_CTRL' }) => {
         </svg>
 
         {/* Info Panel */}
-        {selectedNode && (
-          <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-            <h3 className="font-bold text-sm">{selectedNode.name || selectedNode.courseCode}</h3>
-            {selectedNode.isCore ? (
-              <>
-                <p className="text-sm text-gray-600">Rank: {selectedNode.rank}</p>
-                <p className="text-sm text-red-600">Required Hours: {selectedNode.hours}</p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-600">
-                {specialtyTracks.find(t => t.code === selectedNode.track)?.name} Track
-              </p>
-            )}
-          </div>
-        )}
+        <CourseDetails selectedNode={selectedNode} specialtyTracks={specialtyTracks} />
       </div>
     </div>
   );
