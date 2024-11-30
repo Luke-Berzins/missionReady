@@ -1,131 +1,121 @@
-// mongo-init/init.js
-db = db.getSiblingDB('career_paths');
+db = db.getSiblingDB('artillery_training');
 
-// Trades
-db.trades.insertMany([
+// branches (replacing trades)
+db.branches.insertMany([
   {
-    code: "ELEC",
-    name: "Electrical",
-    description: "Electrical systems installation and maintenance"
+    code: "FIRE_CTRL",
+    name: "Fire Control",
+    description: "Precision targeting and fire control operations"
   },
   {
-    code: "PLUM",
-    name: "Plumbing",
-    description: "Plumbing systems installation and maintenance"
+    code: "FIRE_SUP",
+    name: "Fire Support",
+    description: "Coordinating and delivering indirect fire support"
   }
 ]);
 
-// Core Courses - Electrical
+// core courses - fire control
 db.courses.insertMany([
   {
-    courseCode: "ELEC_SAFE101",
-    name: "Electrical Safety Basics",
+    courseCode: "FIRE_CTRL_SAFE101",
+    name: "Intro to Artillery Safety",
     type: "core",
-    trade: "ELEC",
-    rank: "Entry Level",
+    branch: "FIRE_CTRL",
+    rank: "Cadet",
     hours: 40,
-    description: "Fundamental electrical safety practices"
+    description: "Essential safety practices for artillery operations"
   },
   {
-    courseCode: "ELEC_THEORY201",
-    name: "Electrical Theory",
+    courseCode: "FIRE_CTRL_THEORY201",
+    name: "Ballistics Fundamentals",
     type: "core",
-    trade: "ELEC",
-    rank: "Apprentice",
+    branch: "FIRE_CTRL",
+    rank: "Second Lieutenant",
     hours: 80,
-    prerequisites: ["ELEC_SAFE101"]
+    prerequisites: ["FIRE_CTRL_SAFE101"]
   },
   {
-    courseCode: "ELEC_CODE301",
-    name: "Electrical Code & Standards",
+    courseCode: "FIRE_CTRL_ADV301",
+    name: "Advanced Artillery Systems",
     type: "core",
-    trade: "ELEC",
-    rank: "Apprentice",
-    hours: 100,
-    prerequisites: ["ELEC_THEORY201"]
+    branch: "FIRE_CTRL",
+    rank: "Captain",
+    hours: 120,
+    prerequisites: ["FIRE_CTRL_THEORY201"]
   }
 ]);
 
-// Core Courses - Plumbing
+// core courses - fire support
 db.courses.insertMany([
   {
-    courseCode: "PLUM_SAFE101",
-    name: "Plumbing Safety Basics",
+    courseCode: "FIRE_SUP_SAFE101",
+    name: "Operational Doctrine & Targeting",
     type: "core",
-    trade: "PLUM",
-    rank: "Entry Level",
+    branch: "FIRE_SUP",
+    rank: "Cadet",
     hours: 40,
-    description: "Fundamental plumbing safety practices"
+    description: "Fundamental fire support targeting and doctrine"
   },
   {
-    courseCode: "PLUM_PIPE201",
-    name: "Pipe Theory & Systems",
+    courseCode: "FIRE_SUP_OBS201",
+    name: "Forward Observer Techniques",
     type: "core",
-    trade: "PLUM",
-    rank: "Apprentice",
+    branch: "FIRE_SUP",
+    rank: "Second Lieutenant",
     hours: 80,
-    prerequisites: ["PLUM_SAFE101"]
+    prerequisites: ["FIRE_SUP_SAFE101"]
   },
   {
-    courseCode: "PLUM_CODE301",
-    name: "Plumbing Code & Standards",
+    courseCode: "FIRE_SUP_JOINT301",
+    name: "Joint Fire Planning",
     type: "core",
-    trade: "PLUM",
-    rank: "Apprentice",
-    hours: 100,
-    prerequisites: ["PLUM_PIPE201"]
+    branch: "FIRE_SUP",
+    rank: "Captain",
+    hours: 120,
+    prerequisites: ["FIRE_SUP_OBS201"]
   }
 ]);
 
-// Specialty Tracks - Electrical
+// specialty tracks - fire control
 db.specialty_tracks.insertMany([
   {
-    name: "Residential Electrical",
-    code: "ELEC_RES",
-    trade: "ELEC",
-    description: "Residential electrical installations",
-    color: "#10b981",
-    courses: ["ELEC_RES101", "ELEC_RES102", "ELEC_RES103"],
-    minimumRank: "Apprentice"
+    name: "Advanced Fire Control Systems",
+    code: "FIRE_CTRL_ADV",
+    branch: "FIRE_CTRL",
+    description: "Expert-level training in advanced fire control",
+    color: "#ef4444", // deep red
+    courses: ["FIRE_CTRL_ADV201", "FIRE_CTRL_ADV202", "FIRE_CTRL_ADV203"],
+    minimumRank: "Captain"
   },
   {
-    name: "Industrial Electrical",
-    code: "ELEC_IND",
-    trade: "ELEC",
-    description: "Industrial electrical systems",
-    color: "#3b82f6",
-    courses: ["ELEC_IND101", "ELEC_IND102", "ELEC_IND103"],
-    minimumRank: "Apprentice"
+    name: "Tactical Gunnery",
+    code: "FIRE_CTRL_GUN",
+    branch: "FIRE_CTRL",
+    description: "Specialized training in gunnery techniques",
+    color: "#10b981", // green
+    courses: ["FIRE_CTRL_GUN201", "FIRE_CTRL_GUN202", "FIRE_CTRL_GUN203"],
+    minimumRank: "Second Lieutenant"
   }
 ]);
 
-// Specialty Tracks - Plumbing
+// specialty tracks - fire support
 db.specialty_tracks.insertMany([
   {
-    name: "Residential Plumbing",
-    code: "PLUM_RES",
-    trade: "PLUM",
-    description: "Residential plumbing installations",
-    color: "#10b981",
-    courses: ["PLUM_RES101", "PLUM_RES102", "PLUM_RES103"],
-    minimumRank: "Apprentice"
+    name: "Target Acquisition",
+    code: "FIRE_SUP_TACQ",
+    branch: "FIRE_SUP",
+    description: "Advanced methods for identifying and prioritizing targets",
+    color: "#3b82f6", // blue
+    courses: ["FIRE_SUP_TACQ201", "FIRE_SUP_TACQ202", "FIRE_SUP_TACQ203"],
+    minimumRank: "Second Lieutenant"
   },
   {
-    name: "Commercial Plumbing",
-    code: "PLUM_COM",
-    trade: "PLUM",
-    description: "Commercial plumbing systems",
-    color: "#3b82f6",
-    courses: ["PLUM_COM101", "PLUM_COM102", "PLUM_COM103"],
-    minimumRank: "Apprentice"
-  },
-  {
-    name: "Industrial Plumbing",
-    code: "PLUM_IND",
-    trade: "PLUM",
-    description: "Industrial plumbing systems",
-    color: "#8b5cf6",
-    courses: ["PLUM_IND101", "PLUM_IND102", "PLUM_IND103"],
-    minimumRank: "Journeyman"
+    name: "Combined Arms Integration",
+    code: "FIRE_SUP_CA",
+    branch: "FIRE_SUP",
+    description: "Mastering fire support in combined arms operations",
+    color: "#8b5cf6", // purple
+    courses: ["FIRE_SUP_CA201", "FIRE_SUP_CA202", "FIRE_SUP_CA203"],
+    minimumRank: "Captain"
   }
 ]);
