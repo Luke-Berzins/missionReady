@@ -184,3 +184,21 @@
 .track-selection-container .track-button:last-child {
   margin-right: 0;
 }
+
+/* Scrollbar Styles */
+.course-details-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.course-details-panel::-webkit-scrollbar-track {
+  background: var(--color-olive-100);
+}
+
+.course-details-panel::-webkit-scrollbar-thumb {
+  background: var(--color-olive-700);
+  border-radius: 4px;
+}
+
+.course-details-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-olive-800);
+}

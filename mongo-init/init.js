@@ -116,13 +116,6 @@ db.ranks.insertMany([
   { rank: "Chief Warrant Officer", order: 13, description: "Highest non-commissioned rank with leadership over NCOs.", commissioned: false }
 ]);
 
-// Insert trades with the 'commissioned' field
-db.trades.insertMany([
-  { code: "FIRE_CTRL", name: "Fire Control", description: "Precision targeting and fire control operations", commissioned: true },
-  { code: "FIRE_SUP", name: "Fire Support", description: "Coordinating and delivering indirect fire support", commissioned: true },
-  { code: "INFANTRY", name: "Infantry", description: "Frontline combat and tactical operations", commissioned: false },
-  { code: "LOGISTICS", name: "Logistics", description: "Supply chain management and operational support", commissioned: false }
-]);
 
 // Insert specialty tracks
 db.specialty_tracks.insertMany([
@@ -173,14 +166,14 @@ db.course_sessions.insertMany([
     startDate: ISODate("2025-04-20"),
     endDate: ISODate("2025-05-20"),
     location: "Fort Arrow",
-    school: "RCASr"
+    school: "RCAS"
   },
   {
     courseCode: "FIRE_SUP_OBS201",
     startDate: ISODate("2025-07-01"),
     endDate: ISODate("2025-08-20"),
     location: "Fort Arrow",
-    school: "RCASr"
+    school: "RCAS"
   },
   {
     courseCode: "FIRE_SUP_JOINT301",
@@ -278,14 +271,14 @@ db.course_sessions.insertMany([
     startDate: ISODate("2025-11-20"),
     endDate: ISODate("2025-12-20"),
     location: "Fort Arrow",
-    school: "RCASr"
+    school: "RCAS"
   },
   {
     courseCode: "FIRE_SUP_OBS201",
     startDate: ISODate("2026-02-01"),
     endDate: ISODate("2026-03-20"),
     location: "Fort Arrow",
-    school: "RCASr"
+    school: "RCAS"
   },
   {
     courseCode: "FIRE_SUP_JOINT301",

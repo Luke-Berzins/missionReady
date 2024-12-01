@@ -6,6 +6,7 @@ const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 800;
 const VERTICAL_OFFSET = 150;
 const NODE_RADIUS = 8;
+const TRACK_HORIZONTAL_SPACING = 200; // Adjust this value as needed
 
 const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions }) => {
   const [selectedTrack, setSelectedTrack] = useState(null);
@@ -43,7 +44,6 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
   const { trade, coreCourses, specialtyTracks } = tradeData;
 
-
   // Calculate node positions for vertical layout
   const calculatePositions = () => {
     const { width, height } = dimensions;
@@ -62,12 +62,17 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
     // Position track courses branching off from the core courses
     const trackPositions = [];
 
-    specialtyTracks.forEach((track) => {
+    const totalTracks = specialtyTracks.length;
+
+    specialtyTracks.forEach((track, trackIndex) => {
       const baseCourse = coreCourses.find((course) => course.rank === track.minimumRank);
       const basePosition = corePositions.find((pos) => pos.courseCode === baseCourse.courseCode);
 
+      // Calculate base x offset for this track
+      const xOffsetBase = (trackIndex - (totalTracks - 1) / 2) * TRACK_HORIZONTAL_SPACING;
+
       track.courses.forEach((course, index) => {
-        const xOffset = (index % 2 === 0 ? -1 : 1) * VERTICAL_OFFSET * (index + 1);
+        const xOffset = xOffsetBase;
         const yOffset = (index + 1) * VERTICAL_OFFSET;
 
         const previousCourseCode = course.prerequisites && course.prerequisites[0];
@@ -75,8 +80,8 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
         trackPositions.push({
           ...course,
-          x: previousPosition ? previousPosition.x + xOffset : basePosition.x + xOffset,
-          y: previousPosition ? previousPosition.y + yOffset : basePosition.y + yOffset,
+          x: previousPosition ? previousPosition.x : basePosition.x + xOffset,
+          y: previousPosition ? previousPosition.y + VERTICAL_OFFSET : basePosition.y + yOffset,
           isCore: false,
           track: track.code,
           color: track.color,
@@ -104,21 +109,25 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
     // Track paths
     specialtyTracks.forEach((track) => {
-      track.courses.forEach((course) => {
-        const node = nodePositions.find((n) => n.courseCode === course.courseCode);
-        if (course.prerequisites && course.prerequisites.length > 0) {
-          const prerequisiteCode = course.prerequisites[0];
-          const prerequisiteNode = nodePositions.find((n) => n.courseCode === prerequisiteCode);
-          if (node && prerequisiteNode) {
-            paths.push({ start: prerequisiteNode, end: node, track: track.code });
-          }
-        } else {
-          // Connect to the base course in core positions
+      // Sort track courses based on their sequence in the track
+      const sortedCourses = track.courses; // Assuming they are already in order
+
+      sortedCourses.forEach((course, index) => {
+        const currentNode = nodePositions.find((n) => n.courseCode === course.courseCode);
+        let startNode = null;
+
+        if (index === 0) {
+          // First course in the track, connect to base course
           const baseCourse = coreCourses.find((c) => c.rank === track.minimumRank);
-          const baseNode = nodePositions.find((n) => n.courseCode === baseCourse.courseCode);
-          if (node && baseNode) {
-            paths.push({ start: baseNode, end: node, track: track.code });
-          }
+          startNode = nodePositions.find((n) => n.courseCode === baseCourse.courseCode);
+        } else {
+          // Connect to the previous course in the track
+          const previousCourseCode = sortedCourses[index - 1].courseCode;
+          startNode = nodePositions.find((n) => n.courseCode === previousCourseCode);
+        }
+
+        if (currentNode && startNode) {
+          paths.push({ start: startNode, end: currentNode, track: track.code });
         }
       });
     });
@@ -135,10 +144,25 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
   const gridSize = 20;
 
-  // Calculate rank positions
+  // Calculate rank positions (ensure ranks are sorted correctly)
   const calculateRankPositions = () => {
     const ranks = [...new Set(nodePositions.map((node) => node.rank))];
-    ranks.sort((a, b) => a - b); // You may need to adjust sorting based on rank order
+    const rankOrder = {
+      'Officer Cadet': 1,
+      'Second Lieutenant': 2,
+      'Lieutenant': 3,
+      'Captain': 4,
+      'Major': 5,
+      'Private Recruit': 6,
+      'Private': 7,
+      'Corporal': 8,
+      'Master Corporal': 9,
+      'Sergeant': 10,
+      'Warrant Officer': 11,
+      'Master Warrant Officer': 12,
+      'Chief Warrant Officer': 13,
+    };
+    ranks.sort((a, b) => rankOrder[a] - rankOrder[b]);
 
     const rankPositions = ranks.map((rank) => {
       // Find nodes with this rank
@@ -265,10 +289,10 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
               <g key={`path-${index}`}>
                 <path
                   d={`M ${path.start.x} ${path.start.y} C ${
-                    path.start.x + 50
-                  } ${path.start.y}, ${path.end.x - 50} ${path.end.y}, ${
-                    path.end.x
-                  } ${path.end.y}`}
+                    path.start.x + (path.end.x - path.start.x) / 2
+                  } ${path.start.y}, ${path.start.x + (path.end.x - path.start.x) / 2} ${
+                    path.end.y
+                  }, ${path.end.x} ${path.end.y}`}
                   stroke={pathColor}
                   strokeWidth={path.isCore ? 4 : 2}
                   strokeDasharray={path.isCore ? '' : '5,5'}
