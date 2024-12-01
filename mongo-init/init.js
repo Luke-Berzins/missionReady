@@ -1,13 +1,14 @@
 // Switch to the desired database
 db = db.getSiblingDB('artillery_training');
 
-// Drop existing collections to start fresh (optional)
+// Drop existing collections to start fresh
 db.trades.drop();
 db.courses.drop();
 db.ranks.drop();
-db.course_sessions.drop(); // Add this line to drop course_sessions if re-running the script
+db.course_sessions.drop();
+db.specialty_tracks.drop();
 
-// Insert ranks
+// Insert ranks (keeping the same rank structure)
 db.ranks.insertMany([
   // Commissioned Ranks
   { rank: "Officer Cadet", order: 1, description: "Entry-level rank for training and initiation.", commissioned: true },
@@ -26,352 +27,407 @@ db.ranks.insertMany([
   { rank: "Chief Warrant Officer", order: 13, description: "Highest non-commissioned rank with leadership over NCOs.", commissioned: false }
 ]);
 
-// Insert trades with the 'commissioned' field
+// Insert updated trades
 db.trades.insertMany([
-  { code: "FIRE_CTRL", name: "Fire Control", description: "Precision targeting and fire control operations", commissioned: true },
-  { code: "FIRE_SUP", name: "Fire Support", description: "Coordinating and delivering indirect fire support", commissioned: true },
-  { code: "INFANTRY", name: "Infantry", description: "Frontline combat and tactical operations", commissioned: false },
-  { code: "LOGISTICS", name: "Logistics", description: "Supply chain management and operational support", commissioned: false }
+  { 
+    code: "INFTR", 
+    mosId: "00010",
+    name: "Infanteer", 
+    title: "Infantry",
+    description: "Frontline combat and tactical operations", 
+    commissioned: false 
+  },
+  { 
+    code: "CBT_ENGR", 
+    mosId: "00339",
+    name: "Combat Engineer", 
+    title: "Combat Engineer",
+    description: "Military engineering and construction operations", 
+    commissioned: false 
+  },
+  { 
+    code: "ARTY_O", 
+    mosId: "00179",
+    name: "Artillery Officer", 
+    title: "Artillery Officer",
+    description: "Artillery operations and fire support coordination", 
+    commissioned: true 
+  },
+  { 
+    code: "MSE_OP", 
+    mosId: "00171",
+    name: "Mobile Support Equipment Operator", 
+    title: "Mobile Support Equipment Operator",
+    description: "Vehicle and equipment operation and maintenance", 
+    commissioned: false 
+  }
 ]);
 
-// Insert courses (core and track courses)
+// Insert updated courses with specialty track associations
 db.courses.insertMany([
-  // Core Courses for Fire Control
-  { courseCode: "FIRE_CTRL_SAFE101", name: "Intro to Artillery Safety", type: "core", trade: "FIRE_CTRL", rank: "Officer Cadet", hours: 40, description: "Essential safety practices for artillery operations" },
-  { courseCode: "FIRE_CTRL_THEORY201", name: "Ballistics Fundamentals", type: "core", trade: "FIRE_CTRL", rank: "Second Lieutenant", hours: 80, prerequisites: ["FIRE_CTRL_SAFE101"] },
-  { courseCode: "FIRE_CTRL_ADV301", name: "Advanced Artillery Systems", type: "core", trade: "FIRE_CTRL", rank: "Captain", hours: 120, prerequisites: ["FIRE_CTRL_THEORY201"] },
+  // Infantry Courses
+  // Core Courses
+  { courseCode: "INFTR_BASIC101", name: "Basic Infantry Training", type: "core", trade: "INFTR", rank: "Private Recruit", hours: 60, description: "Fundamental infantry skills and tactics" },
+  
+  // Urban Operations Track
+  { courseCode: "INFTR_URBAN201", name: "Urban Operations I", type: "INFTR_URBAN", trade: "INFTR", rank: "Corporal", hours: 90, description: "Basic urban warfare tactics", prerequisites: ["INFTR_BASIC101"] },
+  { courseCode: "INFTR_URBAN202", name: "Urban Operations II", type: "INFTR_URBAN", trade: "INFTR", rank: "Sergeant", hours: 100, prerequisites: ["INFTR_URBAN201"] },
+  { courseCode: "INFTR_URBAN203", name: "Urban Operations III", type: "INFTR_URBAN", trade: "INFTR", rank: "Warrant Officer", hours: 110, prerequisites: ["INFTR_URBAN202"] },
+  
+  // Reconnaissance Track
+  { courseCode: "INFTR_RECON201", name: "Reconnaissance I", type: "INFTR_RECON", trade: "INFTR", rank: "Corporal", hours: 90, description: "Basic reconnaissance operations", prerequisites: ["INFTR_BASIC101"] },
+  { courseCode: "INFTR_RECON202", name: "Reconnaissance II", type: "INFTR_RECON", trade: "INFTR", rank: "Sergeant", hours: 100, prerequisites: ["INFTR_RECON201"] },
+  { courseCode: "INFTR_RECON203", name: "Reconnaissance III", type: "INFTR_RECON", trade: "INFTR", rank: "Warrant Officer", hours: 110, prerequisites: ["INFTR_RECON202"] },
+  { courseCode: "INFTR_ADV201", name: "Advanced Infantry Operations", type: "core", trade: "INFTR", rank: "Corporal", hours: 80, prerequisites: ["INFTR_BASIC101"] },
+  { courseCode: "INFTR_LEAD301", name: "Infantry Leadership", type: "core", trade: "INFTR", rank: "Sergeant", hours: 100, prerequisites: ["INFTR_ADV201"] },
 
-  // Track Courses for Fire Control - Advanced Fire Control Systems
-  { courseCode: "FIRE_CTRL_ADV201", name: "Advanced Fire Control Systems I", type: "FIRE_CTRL_ADV", trade: "FIRE_CTRL", rank: "Captain", hours: 100, description: "Expert-level training in advanced fire control", color: "#ef4444", prerequisites: ["FIRE_CTRL_ADV301"] },
-  { courseCode: "FIRE_CTRL_ADV202", name: "Advanced Fire Control Systems II", type: "FIRE_CTRL_ADV", trade: "FIRE_CTRL", rank: "Major", hours: 110, prerequisites: ["FIRE_CTRL_ADV201"] },
-  { courseCode: "FIRE_CTRL_ADV203", name: "Advanced Fire Control Systems III", type: "FIRE_CTRL_ADV", trade: "FIRE_CTRL", rank: "Major", hours: 120, prerequisites: ["FIRE_CTRL_ADV202"] },
+  // Combat Engineer Courses
+  // Core Courses
+  
+    {
+      courseCode: "PRes_BMQ_LAND",
+      name: "PRes Basic Military Qualification",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private Recruit",
+      prerequisite: "BMQ",
+      hours: 12 * 8, // Converting days to hours (assuming 8-hour days)
+      description: "Basic Military Qualification for Primary Reserve"
+    },
+    {
+      courseCode: "DP1_CBT_ENGR_SECT_MOD1",
+      name: "PRes DP1 Combat Engineer Section Member Mod 1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "PRes_BMQ_LAND",
+      hours: 9 * 8,
+      description: "Combat Engineer Section Member Module 1 training"
+    },
+    {
+      courseCode: "DP1_CBT_ENGR_SECT_MOD2",
+      name: "PRes DP1 Combat Engineer Section Member Mod 2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP1_CBT_ENGR_SECT_MOD1",
+      hours: 17 * 8,
+      description: "Combat Engineer Section Member Module 2 training"
+    },
+    {
+      courseCode: "DP1_CBT_ENGR_SECT_MOD3",
+      name: "PRes DP1 Combat Engineer Section Member Mod 3",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP1_CBT_ENGR_SECT_MOD2",
+      hours: 11 * 8,
+      description: "Combat Engineer Section Member Module 3 training"
+    },
+    {
+      courseCode: "DP1_CBT_ENGR_SECT_MOD4",
+      name: "PRes DP1 Combat Engineer Section Member Mod 4",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP1_CBT_ENGR_SECT_MOD3",
+      hours: 8 * 8,
+      description: "Combat Engineer Section Member Module 4 training"
+    },
+    {
+      courseCode: "DP1_CBT_ENGR_SECT_MOD5",
+      name: "PRes DP1 Combat Engineer Section Member Mod 5",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP1_CBT_ENGR_SECT_MOD4",
+      hours: 9 * 8,
+      description: "Combat Engineer Section Member Module 5 training"
+    },
+    {
+      courseCode: "DP2_CBT_ENGR_SECT_2IC_MOD1",
+      name: "PRes DP2 Combat Engineer Section 2IC Mod1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP1_CBT_ENGR_SECT_MOD5",
+      hours: 7 * 8,
+      description: "Combat Engineer Section Second-in-Command Module 1 (Distance Learning)"
+    },
+    {
+      courseCode: "DP2_CBT_ENGR_SECT_2IC_MOD2",
+      name: "PRes DP2 Combat Engineer Section 2IC Mod2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Private",
+      prerequisite: "DP2_CBT_ENGR_SECT_2IC_MOD1",
+      hours: 22 * 8,
+      description: "Combat Engineer Section Second-in-Command Module 2"
+    },
+    {
+      courseCode: "DP2_PLQ_MOD1",
+      name: "DP2 Primary Leadership Qualification Mod 1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Corporal",
+      prerequisite: "DP2_CBT_ENGR_SECT_2IC_MOD2",
+      hours: 9 * 8,
+      description: "Primary Leadership Qualification Module 1 (Distance Learning)"
+    },
+    {
+      courseCode: "DP2_PLQ_MOD2",
+      name: "DP2 Primary Leadership Qualification Mod 2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Corporal",
+      prerequisite: "DP2_PLQ_MOD1",
+      hours: 11 * 8,
+      description: "Primary Leadership Qualification Module 2"
+    },
+    {
+      courseCode: "DP2_PLQ_MOD3",
+      name: "DP2 Primary Leadership Qualification Mod 3",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Corporal",
+      prerequisite: "DP2_PLQ_MOD2",
+      hours: 17 * 8,
+      description: "Primary Leadership Qualification Module 3"
+    },
+    {
+      courseCode: "CBT_ENGR_RQ_MCPL",
+      name: "Combat Engineer Rank Qualification MCpl",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Corporal",
+      prerequisite: "DP2_PLQ_MOD3",
+      hours: 12 * 8,
+      description: "Master Corporal Rank Qualification for Combat Engineers"
+    },
+    {
+      courseCode: "DP3A_CBT_ENGR_SECT_COMD_MOD1",
+      name: "PRes DP3A Combat Engineer Section Commander Mod 1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Master Corporal",
+      prerequisite: "CBT_ENGR_RQ_MCPL",
+      hours: 4 * 8,
+      description: "Combat Engineer Section Commander Module 1 (Distance Learning)"
+    },
+    {
+      courseCode: "DP3A_CBT_ENGR_SECT_COMD_MOD2",
+      name: "PRes DP3A Combat Engineer Section Commander Mod 2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Master Corporal",
+      prerequisite: "DP3A_CBT_ENGR_SECT_COMD_MOD1",
+      hours: 40 * 8,
+      description: "Combat Engineer Section Commander Module 2"
+    },
+    {
+      courseCode: "DP3B_CBT_ENGR_WO_MOD1",
+      name: "PRes DP3A Combat Engineer Troop Warrant Officer Mod 1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Sergeant",
+      prerequisite: "DP3A_CBT_ENGR_SECT_COMD_MOD2",
+      hours: 16 * 8,
+      description: "Combat Engineer Troop Warrant Officer Module 1 (Distance Learning)"
+    },
+    {
+      courseCode: "DP3B_CBT_ENGR_WO_MOD2",
+      name: "PRes DP3A Combat Engineer Troop Warrant Officer Mod 2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Sergeant",
+      prerequisite: "DP3B_CBT_ENGR_WO_MOD1",
+      hours: 19 * 8,
+      description: "Combat Engineer Troop Warrant Officer Module 2"
+    },
+    {
+      courseCode: "ILP_MOD1",
+      name: "Intermediate Leadership Programme Mod1",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Sergeant",
+      prerequisite: "DP3B_CBT_ENGR_WO_MOD2",
+      hours: 10 * 8,
+      description: "Intermediate Leadership Programme Module 1 (Distance Learning)"
+    },
+    {
+      courseCode: "ILP_MOD2",
+      name: "Intermediate Leadership Programme Mod2",
+      type: "core",
+      trade: "CBT_ENGR",
+      rank: "Sergeant",
+      prerequisite: "ILP_MOD1",
+      hours: 14 * 8,
+      description: "Intermediate Leadership Programme Module 2"
+    },
+  
+  // EOD Track
+  { courseCode: "CBT_ENGR_EOD201", name: "EOD Operations I", type: "CBT_ENGR_EOD", trade: "CBT_ENGR", rank: "Corporal", hours: 90, description: "Basic EOD procedures", prerequisites: ["CBT_ENGR_BASIC101"] },
+  { courseCode: "CBT_ENGR_EOD202", name: "EOD Operations II", type: "CBT_ENGR_EOD", trade: "CBT_ENGR", rank: "Sergeant", hours: 100, prerequisites: ["CBT_ENGR_EOD201"] },
+  { courseCode: "CBT_ENGR_EOD203", name: "EOD Operations III", type: "CBT_ENGR_EOD", trade: "CBT_ENGR", rank: "Warrant Officer", hours: 110, prerequisites: ["CBT_ENGR_EOD202"] },
+  
+  // Bridge Construction Track
+  { courseCode: "CBT_ENGR_BRIDGE201", name: "Bridge Construction I", type: "CBT_ENGR_BRIDGE", trade: "CBT_ENGR", rank: "Corporal", hours: 90, description: "Basic bridge construction", prerequisites: ["CBT_ENGR_BASIC101"] },
+  { courseCode: "CBT_ENGR_BRIDGE202", name: "Bridge Construction II", type: "CBT_ENGR_BRIDGE", trade: "CBT_ENGR", rank: "Sergeant", hours: 100, prerequisites: ["CBT_ENGR_BRIDGE201"] },
+  { courseCode: "CBT_ENGR_BRIDGE203", name: "Bridge Construction III", type: "CBT_ENGR_BRIDGE", trade: "CBT_ENGR", rank: "Warrant Officer", hours: 110, prerequisites: ["CBT_ENGR_BRIDGE202"] },
+  { courseCode: "CBT_ENGR_CONST201", name: "Military Construction", type: "CBT_ENGR_BRIDGE", trade: "CBT_ENGR", rank: "Corporal", hours: 90, prerequisites: ["CBT_ENGR_BASIC101"] },
+  { courseCode: "CBT_ENGR_DEMO301", name: "Advanced Demolitions", type: "CBT_ENGR_BRIDGE", trade: "CBT_ENGR", rank: "Sergeant", hours: 110, prerequisites: ["CBT_ENGR_CONST201"] },
 
-  // Track Courses for Fire Control - Tactical Gunnery
-  { courseCode: "FIRE_CTRL_GUN201", name: "Tactical Gunnery I", type: "FIRE_CTRL_GUN", trade: "FIRE_CTRL", rank: "Second Lieutenant", hours: 90, description: "Specialized training in gunnery techniques", color: "#10b981", prerequisites: ["FIRE_CTRL_THEORY201"] },
-  { courseCode: "FIRE_CTRL_GUN202", name: "Tactical Gunnery II", type: "FIRE_CTRL_GUN", trade: "FIRE_CTRL", rank: "Captain", hours: 100, prerequisites: ["FIRE_CTRL_GUN201"] },
-  { courseCode: "FIRE_CTRL_GUN203", name: "Tactical Gunnery III", type: "FIRE_CTRL_GUN", trade: "FIRE_CTRL", rank: "Major", hours: 110, prerequisites: ["FIRE_CTRL_GUN202"] },
+  // Artillery Officer Courses
+  // Core Courses
+  { courseCode: "ARTY_O_BASIC101", name: "Artillery Officer Basic Course", type: "core", trade: "ARTY_O", rank: "Officer Cadet", hours: 80, description: "Basic artillery officer training" },
+  
+  { courseCode: "ARTY_O_FIRE201", name: "Fire Support Coordination", type: "core", trade: "ARTY_O", rank: "Second Lieutenant", hours: 100, prerequisites: ["ARTY_O_BASIC101"] },
+  { courseCode: "ARTY_O_ADV301", name: "Advanced Artillery Operations", type: "core", trade: "ARTY_O", rank: "Captain", hours: 120, prerequisites: ["ARTY_O_FIRE201"] },
 
-  // Core Courses for Fire Support
-  { courseCode: "FIRE_SUP_SAFE101", name: "Operational Doctrine & Targeting", type: "core", trade: "FIRE_SUP", rank: "Officer Cadet", hours: 40, description: "Fundamental fire support targeting and doctrine" },
-  { courseCode: "FIRE_SUP_OBS201", name: "Forward Observer Techniques", type: "core", trade: "FIRE_SUP", rank: "Second Lieutenant", hours: 80, prerequisites: ["FIRE_SUP_SAFE101"] },
-  { courseCode: "FIRE_SUP_JOINT301", name: "Joint Fire Planning", type: "core", trade: "FIRE_SUP", rank: "Captain", hours: 120, prerequisites: ["FIRE_SUP_OBS201"] },
-
-  // Track Courses for Fire Support - Target Acquisition
-  { courseCode: "FIRE_SUP_TACQ201", name: "Target Acquisition I", type: "FIRE_SUP_TACQ", trade: "FIRE_SUP", rank: "Second Lieutenant", hours: 90, description: "Advanced methods for identifying and prioritizing targets", color: "#3b82f6", prerequisites: ["FIRE_SUP_OBS201"] },
-  { courseCode: "FIRE_SUP_TACQ202", name: "Target Acquisition II", type: "FIRE_SUP_TACQ", trade: "FIRE_SUP", rank: "Captain", hours: 100, prerequisites: ["FIRE_SUP_TACQ201"] },
-  { courseCode: "FIRE_SUP_TACQ203", name: "Target Acquisition III", type: "FIRE_SUP_TACQ", trade: "FIRE_SUP", rank: "Major", hours: 110, prerequisites: ["FIRE_SUP_TACQ202"] },
-
-  // Track Courses for Fire Support - Combined Arms Integration
-  { courseCode: "FIRE_SUP_CA201", name: "Combined Arms Integration I", type: "FIRE_SUP_CA", trade: "FIRE_SUP", rank: "Captain", hours: 100, description: "Mastering fire support in combined arms operations", color: "#8b5cf6", prerequisites: ["FIRE_SUP_JOINT301"] },
-  { courseCode: "FIRE_SUP_CA202", name: "Combined Arms Integration II", type: "FIRE_SUP_CA", trade: "FIRE_SUP", rank: "Major", hours: 110, prerequisites: ["FIRE_SUP_CA201"] },
-  { courseCode: "FIRE_SUP_CA203", name: "Combined Arms Integration III", type: "FIRE_SUP_CA", trade: "FIRE_SUP", rank: "Major", hours: 120, prerequisites: ["FIRE_SUP_CA202"] },
-
-  // Core Courses for Infantry
-  { courseCode: "INFANTRY_BASIC101", name: "Basic Infantry Training", type: "core", trade: "INFANTRY", rank: "Private Recruit", hours: 60, description: "Fundamental skills and knowledge for infantry operations" },
-  { courseCode: "INFANTRY_TACTICS201", name: "Infantry Tactics", type: "core", trade: "INFANTRY", rank: "Corporal", hours: 80, prerequisites: ["INFANTRY_BASIC101"] },
-  { courseCode: "INFANTRY_LEAD301", name: "Leadership in Infantry", type: "core", trade: "INFANTRY", rank: "Sergeant", hours: 100, prerequisites: ["INFANTRY_TACTICS201"] },
-
-  // Track Courses for Infantry - Urban Warfare
-  { courseCode: "INFANTRY_UW201", name: "Urban Warfare I", type: "INFANTRY_UW", trade: "INFANTRY", rank: "Corporal", hours: 90, description: "Specialized training in urban combat and maneuvering", color: "#f59e0b", prerequisites: ["INFANTRY_TACTICS201"] },
-  { courseCode: "INFANTRY_UW202", name: "Urban Warfare II", type: "INFANTRY_UW", trade: "INFANTRY", rank: "Sergeant", hours: 100, prerequisites: ["INFANTRY_UW201"] },
-  { courseCode: "INFANTRY_UW203", name: "Urban Warfare III", type: "INFANTRY_UW", trade: "INFANTRY", rank: "Warrant Officer", hours: 110, prerequisites: ["INFANTRY_UW202"] },
-
-  // Track Courses for Infantry - Reconnaissance
-  { courseCode: "INFANTRY_REC201", name: "Reconnaissance I", type: "INFANTRY_REC", trade: "INFANTRY", rank: "Corporal", hours: 90, description: "Techniques and strategies for effective reconnaissance missions", color: "#10b981", prerequisites: ["INFANTRY_TACTICS201"] },
-  { courseCode: "INFANTRY_REC202", name: "Reconnaissance II", type: "INFANTRY_REC", trade: "INFANTRY", rank: "Sergeant", hours: 100, prerequisites: ["INFANTRY_REC201"] },
-  { courseCode: "INFANTRY_REC203", name: "Reconnaissance III", type: "INFANTRY_REC", trade: "INFANTRY", rank: "Warrant Officer", hours: 110, prerequisites: ["INFANTRY_REC202"] },
-
-  // Core Courses for Logistics
-  { courseCode: "LOGISTICS_FOUND101", name: "Foundations of Logistics", type: "core", trade: "LOGISTICS", rank: "Private Recruit", hours: 50, description: "Introduction to logistics principles and supply chain management" },
-  { courseCode: "LOGISTICS_MANAGE201", name: "Logistics Management", type: "core", trade: "LOGISTICS", rank: "Corporal", hours: 70, prerequisites: ["LOGISTICS_FOUND101"] },
-  { courseCode: "LOGISTICS_STRAT301", name: "Strategic Logistics", type: "core", trade: "LOGISTICS", rank: "Sergeant", hours: 90, prerequisites: ["LOGISTICS_MANAGE201"] },
-
-  // Track Courses for Logistics - Inventory Management
-  { courseCode: "LOGISTICS_INV201", name: "Inventory Management I", type: "LOGISTICS_INV", trade: "LOGISTICS", rank: "Corporal", hours: 80, description: "Advanced methods for managing and optimizing inventory", color: "#3b82f6", prerequisites: ["LOGISTICS_MANAGE201"] },
-  { courseCode: "LOGISTICS_INV202", name: "Inventory Management II", type: "LOGISTICS_INV", trade: "LOGISTICS", rank: "Sergeant", hours: 90, prerequisites: ["LOGISTICS_INV201"] },
-  { courseCode: "LOGISTICS_INV203", name: "Inventory Management III", type: "LOGISTICS_INV", trade: "LOGISTICS", rank: "Warrant Officer", hours: 100, prerequisites: ["LOGISTICS_INV202"] },
-
-  // Track Courses for Logistics - Procurement Strategies
-  { courseCode: "LOGISTICS_PROC201", name: "Procurement Strategies I", type: "LOGISTICS_PROC", trade: "LOGISTICS", rank: "Sergeant", hours: 90, description: "Strategic procurement and supplier relationship management", color: "#8b5cf6", prerequisites: ["LOGISTICS_STRAT301"] },
-  { courseCode: "LOGISTICS_PROC202", name: "Procurement Strategies II", type: "LOGISTICS_PROC", trade: "LOGISTICS", rank: "Warrant Officer", hours: 100, prerequisites: ["LOGISTICS_PROC201"] },
-  { courseCode: "LOGISTICS_PROC203", name: "Procurement Strategies III", type: "LOGISTICS_PROC", trade: "LOGISTICS", rank: "Master Warrant Officer", hours: 110, prerequisites: ["LOGISTICS_PROC202"] }
+  // MSE Operator Courses
+  { courseCode: "MSE_OP_BASIC101", name: "Basic Vehicle Operations", type: "core", trade: "MSE_OP", rank: "Private Recruit", hours: 50, description: "Basic vehicle operation and maintenance" },
+  { courseCode: "MSE_OP_MAINT201", name: "Advanced Maintenance", type: "core", trade: "MSE_OP", rank: "Corporal", hours: 70, prerequisites: ["MSE_OP_BASIC101"] },
+  { courseCode: "MSE_OP_SPEC301", name: "Specialized Equipment Operations", type: "core", trade: "MSE_OP", rank: "Sergeant", hours: 90, prerequisites: ["MSE_OP_MAINT201"] }
 ]);
-
-// Insert ranks
-db.ranks.insertMany([
-  // Commissioned Ranks
-  { rank: "Officer Cadet", order: 1, description: "Entry-level rank for training and initiation.", commissioned: true },
-  { rank: "Second Lieutenant", order: 2, description: "Junior officer rank responsible for basic leadership.", commissioned: true },
-  { rank: "Lieutenant", order: 3, description: "Intermediate officer rank with leadership and tactical responsibilities.", commissioned: true },
-  { rank: "Captain", order: 4, description: "Senior officer rank managing larger operations and units.", commissioned: true },
-  { rank: "Major", order: 5, description: "Field officer rank overseeing major missions and strategic planning.", commissioned: true },
-  // Non-Commissioned Ranks
-  { rank: "Private Recruit", order: 6, description: "Initial rank for new recruits.", commissioned: false },
-  { rank: "Private", order: 7, description: "Basic trained soldier.", commissioned: false },
-  { rank: "Corporal", order: 8, description: "Junior NCO with leadership potential.", commissioned: false },
-  { rank: "Master Corporal", order: 9, description: "NCO responsible for small unit leadership.", commissioned: false },
-  { rank: "Sergeant", order: 10, description: "Senior NCO responsible for unit discipline and training.", commissioned: false },
-  { rank: "Warrant Officer", order: 11, description: "Experienced NCO with significant responsibilities.", commissioned: false },
-  { rank: "Master Warrant Officer", order: 12, description: "Senior NCO involved in high-level operations.", commissioned: false },
-  { rank: "Chief Warrant Officer", order: 13, description: "Highest non-commissioned rank with leadership over NCOs.", commissioned: false }
-]);
-
 
 // Insert specialty tracks
 db.specialty_tracks.insertMany([
-  // Fire Control (Commissioned)
-  { name: "Advanced Fire Control Systems", code: "FIRE_CTRL_ADV", trade: "FIRE_CTRL", description: "Expert-level training in advanced fire control", color: "#ef4444", courses: ["FIRE_CTRL_ADV201", "FIRE_CTRL_ADV202", "FIRE_CTRL_ADV203"], minimumRank: "Captain" },
-  { name: "Tactical Gunnery", code: "FIRE_CTRL_GUN", trade: "FIRE_CTRL", description: "Specialized training in gunnery techniques", color: "#10b981", courses: ["FIRE_CTRL_GUN201", "FIRE_CTRL_GUN202", "FIRE_CTRL_GUN203"], minimumRank: "Second Lieutenant" },
+  // Infantry Specialty Tracks
+  { 
+    name: "Urban Operations", 
+    code: "INFTR_URBAN", 
+    trade: "INFTR", 
+    description: "Specialized training in urban warfare", 
+    color: "#ef4444", 
+    minimumRank: "Corporal" 
+  },
+  { 
+    name: "Reconnaissance", 
+    code: "INFTR_RECON", 
+    trade: "INFTR", 
+    description: "Advanced reconnaissance and surveillance", 
+    color: "#10b981", 
+    minimumRank: "Corporal" 
+  },
 
-  // Fire Support (Commissioned)
-  { name: "Target Acquisition", code: "FIRE_SUP_TACQ", trade: "FIRE_SUP", description: "Advanced methods for identifying and prioritizing targets", color: "#3b82f6", courses: ["FIRE_SUP_TACQ201", "FIRE_SUP_TACQ202", "FIRE_SUP_TACQ203"], minimumRank: "Second Lieutenant" },
-  { name: "Combined Arms Integration", code: "FIRE_SUP_CA", trade: "FIRE_SUP", description: "Mastering fire support in combined arms operations", color: "#8b5cf6", courses: ["FIRE_SUP_CA201", "FIRE_SUP_CA202", "FIRE_SUP_CA203"], minimumRank: "Captain" },
+  // Combat Engineer Specialty Tracks
+  { 
+    name: "Explosive Ordnance Disposal", 
+    code: "CBT_ENGR_EOD", 
+    trade: "CBT_ENGR", 
+    description: "Specialized EOD operations", 
+    color: "#3b82f6", 
+    minimumRank: "Corporal" 
+  },
+  { 
+    name: "Bridge Construction", 
+    code: "CBT_ENGR_BRIDGE", 
+    trade: "CBT_ENGR", 
+    description: "Advanced bridge building operations", 
+    color: "#8b5cf6", 
+    minimumRank: "Corporal" 
+  },
 
-  // Infantry (Non-Commissioned)
-  { name: "Urban Warfare", code: "INFANTRY_UW", trade: "INFANTRY", description: "Specialized training in urban combat and maneuvering", color: "#f59e0b", courses: ["INFANTRY_UW201", "INFANTRY_UW202", "INFANTRY_UW203"], minimumRank: "Corporal" },
-  { name: "Reconnaissance", code: "INFANTRY_REC", trade: "INFANTRY", description: "Techniques and strategies for effective reconnaissance missions", color: "#10b981", courses: ["INFANTRY_REC201", "INFANTRY_REC202", "INFANTRY_REC203"], minimumRank: "Corporal" },
+  // Artillery Officer Specialty Tracks
+  { 
+    name: "Joint Fires", 
+    code: "ARTY_O_JOINT", 
+    trade: "ARTY_O", 
+    description: "Joint fires coordination and planning", 
+    color: "#f59e0b", 
+    minimumRank: "Captain" 
+  },
+  { 
+    name: "Target Acquisition", 
+    code: "ARTY_O_TACQ", 
+    trade: "ARTY_O", 
+    description: "Advanced target acquisition systems", 
+    color: "#10b981", 
+    minimumRank: "Second Lieutenant" 
+  },
 
-  // Logistics (Non-Commissioned)
-  { name: "Inventory Management", code: "LOGISTICS_INV", trade: "LOGISTICS", description: "Advanced methods for managing and optimizing inventory", color: "#3b82f6", courses: ["LOGISTICS_INV201", "LOGISTICS_INV202", "LOGISTICS_INV203"], minimumRank: "Corporal" },
-  { name: "Procurement Strategies", code: "LOGISTICS_PROC", trade: "LOGISTICS", description: "Strategic procurement and supplier relationship management", color: "#8b5cf6", courses: ["LOGISTICS_PROC201", "LOGISTICS_PROC202", "LOGISTICS_PROC203"], minimumRank: "Sergeant" }
+  // MSE Operator Specialty Tracks
+  { 
+    name: "Heavy Equipment", 
+    code: "MSE_OP_HEAVY", 
+    trade: "MSE_OP", 
+    description: "Heavy equipment operation", 
+    color: "#3b82f6", 
+    minimumRank: "Corporal" 
+  },
+  { 
+    name: "Recovery Operations", 
+    code: "MSE_OP_RECOVERY", 
+    trade: "MSE_OP", 
+    description: "Vehicle recovery and maintenance", 
+    color: "#8b5cf6", 
+    minimumRank: "Corporal" 
+  }
 ]);
 
-// Insert course sessions
+// Insert course sessions (updated locations and dates)
 db.course_sessions.insertMany([
-  // Fire Control Course Sessions
-  {
-    courseCode: "FIRE_CTRL_SAFE101",
-    startDate: ISODate("2025-04-15"),
-    endDate: ISODate("2025-05-15"),
-    location: "Fort Cannon",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_CTRL_THEORY201",
-    startDate: ISODate("2025-06-01"),
-    endDate: ISODate("2025-07-20"),
-    location: "Fort Cannon",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_CTRL_ADV301",
-    startDate: ISODate("2025-08-05"),
-    endDate: ISODate("2025-09-30"),
-    location: "Fort Barrage",
-    school: "RCAS"
-  },
-  // Fire Support Course Sessions
-  {
-    courseCode: "FIRE_SUP_SAFE101",
-    startDate: ISODate("2025-04-20"),
-    endDate: ISODate("2025-05-20"),
-    location: "Fort Arrow",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_SUP_OBS201",
-    startDate: ISODate("2025-07-01"),
-    endDate: ISODate("2025-08-20"),
-    location: "Fort Arrow",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_SUP_JOINT301",
-    startDate: ISODate("2025-09-10"),
-    endDate: ISODate("2025-11-05"),
-    location: "Joint Forces Base",
-    school: "RCAS"
-  },
   // Infantry Course Sessions
   {
-    courseCode: "INFANTRY_BASIC101",
-    startDate: ISODate("2025-03-25"),
-    endDate: ISODate("2025-04-25"),
-    location: "Camp Alpha",
-    school: "Infantry Training School"
-  },
-  {
-    courseCode: "INFANTRY_TACTICS201",
-    startDate: ISODate("2025-05-10"),
-    endDate: ISODate("2025-06-30"),
-    location: "Camp Bravo",
-    school: "Infantry Tactics Center"
-  },
-  {
-    courseCode: "INFANTRY_LEAD301",
-    startDate: ISODate("2025-07-15"),
-    endDate: ISODate("2025-09-15"),
-    location: "Camp Charlie",
-    school: "Infantry Leadership Academy"
-  },
-  // Logistics Course Sessions
-  {
-    courseCode: "LOGISTICS_FOUND101",
-    startDate: ISODate("2025-04-05"),
-    endDate: ISODate("2025-05-05"),
-    location: "Supply Base Delta",
-    school: "CFLTC"
-  },
-  {
-    courseCode: "LOGISTICS_MANAGE201",
-    startDate: ISODate("2025-06-15"),
-    endDate: ISODate("2025-08-05"),
-    location: "Supply Base Echo",
-    school: "CFLTC"
-  },
-  {
-    courseCode: "LOGISTICS_STRAT301",
-    startDate: ISODate("2025-09-01"),
-    endDate: ISODate("2025-10-31"),
-    location: "Supply Base Foxtrot",
-    school: "CFLTC"
-  },
-  
-  {
-    courseCode: "FIRE_CTRL_SAFE101",
+    courseCode: "INFTR_BASIC101",
     startDate: ISODate("2025-04-15"),
     endDate: ISODate("2025-05-15"),
-    location: "Fort Cannon",
-    school: "RCAS"
-  },
-  // ... (existing sessions)
-  
-  // Additional Fire Control Course Sessions
-  {
-    courseCode: "FIRE_CTRL_SAFE101",
-    startDate: ISODate("2025-10-10"),
-    endDate: ISODate("2025-11-10"),
-    location: "Fort Shield",
-    school: "RCAS"
+    location: "Infantry Training Center",
+    school: "Combat Arms School"
   },
   {
-    courseCode: "FIRE_CTRL_SAFE101",
-    startDate: ISODate("2026-01-20"),
-    endDate: ISODate("2026-02-20"),
-    location: "Fort Cannon",
-    school: "RCAS"
+    courseCode: "INFTR_ADV201",
+    startDate: ISODate("2025-06-01"),
+    endDate: ISODate("2025-07-20"),
+    location: "Infantry Training Center",
+    school: "Combat Arms School"
+  },
+
+  // Combat Engineer Course Sessions
+  {
+    courseCode: "CBT_ENGR_BASIC101",
+    startDate: ISODate("2025-04-20"),
+    endDate: ISODate("2025-05-20"),
+    location: "Engineer Training School",
+    school: "Canadian Military Engineers School"
   },
   {
-    courseCode: "FIRE_CTRL_THEORY201",
-    startDate: ISODate("2025-12-05"),
-    endDate: ISODate("2026-01-25"),
-    location: "Fort Barrage",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_CTRL_ADV301",
-    startDate: ISODate("2026-03-15"),
-    endDate: ISODate("2026-05-10"),
-    location: "Fort Shield",
-    school: "RCAS"
-  },
-  // Additional Fire Support Course Sessions
-  {
-    courseCode: "FIRE_SUP_SAFE101",
-    startDate: ISODate("2025-11-20"),
-    endDate: ISODate("2025-12-20"),
-    location: "Fort Arrow",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_SUP_OBS201",
-    startDate: ISODate("2026-02-01"),
-    endDate: ISODate("2026-03-20"),
-    location: "Fort Arrow",
-    school: "RCAS"
-  },
-  {
-    courseCode: "FIRE_SUP_JOINT301",
-    startDate: ISODate("2026-04-10"),
-    endDate: ISODate("2026-06-05"),
-    location: "Joint Forces Base",
-    school: "RCAS"
-  },
-  // Additional Infantry Course Sessions
-  {
-    courseCode: "INFANTRY_BASIC101",
-    startDate: ISODate("2025-09-25"),
-    endDate: ISODate("2025-10-25"),
-    location: "Camp Alpha",
-    school: "Infantry Training School"
-  },
-  {
-    courseCode: "INFANTRY_TACTICS201",
-    startDate: ISODate("2025-11-10"),
-    endDate: ISODate("2025-12-30"),
-    location: "Camp Bravo",
-    school: "Infantry Tactics Center"
-  },
-  {
-    courseCode: "INFANTRY_LEAD301",
-    startDate: ISODate("2026-01-15"),
-    endDate: ISODate("2026-03-15"),
-    location: "Camp Charlie",
-    school: "Infantry Leadership Academy"
-  },
-  // Additional Logistics Course Sessions
-  {
-    courseCode: "LOGISTICS_FOUND101",
-    startDate: ISODate("2025-10-05"),
-    endDate: ISODate("2025-11-05"),
-    location: "Supply Base Delta",
-    school: "CFLTC"
-  },
-  {
-    courseCode: "LOGISTICS_MANAGE201",
-    startDate: ISODate("2025-12-15"),
-    endDate: ISODate("2026-02-05"),
-    location: "Supply Base Echo",
-    school: "CFLTC"
-  },
-  {
-    courseCode: "LOGISTICS_STRAT301",
-    startDate: ISODate("2026-03-01"),
-    endDate: ISODate("2026-04-30"),
-    location: "Supply Base Foxtrot",
-    school: "CFLTC"
-  },
-  // Additional Sessions for Other Courses
-  {
-    courseCode: "MEDIC_BASIC101",
-    startDate: ISODate("2025-08-01"),
-    endDate: ISODate("2025-09-15"),
-    location: "Medical Camp Alpha",
-    school: "Medical Training Center"
-  },
-  {
-    courseCode: "MEDIC_ADV201",
-    startDate: ISODate("2025-11-01"),
-    endDate: ISODate("2025-12-15"),
-    location: "Medical Camp Beta",
-    school: "Medical Training Center"
-  },
-  {
-    courseCode: "ENG_BASIC101",
-    startDate: ISODate("2025-07-05"),
+    courseCode: "CBT_ENGR_CONST201",
+    startDate: ISODate("2025-07-01"),
     endDate: ISODate("2025-08-20"),
-    location: "Engineer Base Gamma",
-    school: "Engineering Corps School"
+    location: "Engineer Training School",
+    school: "Canadian Military Engineers School"
+  },
+
+  // Artillery Officer Course Sessions
+  {
+    courseCode: "ARTY_O_BASIC101",
+    startDate: ISODate("2025-05-10"),
+    endDate: ISODate("2025-06-10"),
+    location: "Artillery School",
+    school: "Royal Regiment of Canadian Artillery School"
   },
   {
-    courseCode: "ENG_ADV201",
-    startDate: ISODate("2025-10-10"),
-    endDate: ISODate("2025-11-25"),
-    location: "Engineer Base Delta",
-    school: "Engineering Corps School"
+    courseCode: "ARTY_O_FIRE201",
+    startDate: ISODate("2025-08-01"),
+    endDate: ISODate("2025-09-20"),
+    location: "Artillery School",
+    school: "Royal Regiment of Canadian Artillery School"
+  },
+
+  // MSE Operator Course Sessions
+  {
+    courseCode: "MSE_OP_BASIC101",
+    startDate: ISODate("2025-04-05"),
+    endDate: ISODate("2025-05-05"),
+    location: "Transport Training Center",
+    school: "Canadian Forces Logistics Training Centre"
   },
   {
-    courseCode: "COMMS_BASIC101",
-    startDate: ISODate("2025-09-01"),
-    endDate: ISODate("2025-10-10"),
-    location: "Communication Hub Epsilon",
-    school: "Signal Training School"
-  },
-  {
-    courseCode: "COMMS_ADV201",
-    startDate: ISODate("2025-12-01"),
-    endDate: ISODate("2026-01-10"),
-    location: "Communication Hub Zeta",
-    school: "Signal Training School"
+    courseCode: "MSE_OP_MAINT201",
+    startDate: ISODate("2025-06-15"),
+    endDate: ISODate("2025-08-05"),
+    location: "Transport Training Center",
+    school: "Canadian Forces Logistics Training Centre"
   }
 ]);

@@ -29,6 +29,7 @@
 .font-military {
   font-family: 'Military', monospace;
   letter-spacing: 0.05em;
+  size: 1em;
 }
 
 /* Track Selection Container */
@@ -202,3 +203,4 @@
 .course-details-panel::-webkit-scrollbar-thumb:hover {
   background: var(--color-olive-800);
 }
+

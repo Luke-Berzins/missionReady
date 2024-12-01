@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Compass } from 'lucide-react';
 import './css/NetworkPath.css';
 
-const DEFAULT_WIDTH = 600;
-const DEFAULT_HEIGHT = 800;
-const VERTICAL_OFFSET = 150;
-const NODE_RADIUS = 8;
-const TRACK_HORIZONTAL_SPACING = 200; // Adjust this value as needed
+// Adjusted constants for better spacing
+const DEFAULT_WIDTH = 1200;
+const DEFAULT_HEIGHT = 1600;
+const VERTICAL_OFFSET = 200;
+const NODE_RADIUS = 10;
+const TRACK_HORIZONTAL_SPACING = 600;
+const VERTICAL_SPACING_MULTIPLIER = 1.5;
+const RANK_MIN_GAP = 100; 
 
 const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions }) => {
   const [selectedTrack, setSelectedTrack] = useState(null);
@@ -16,7 +19,6 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
   });
   const containerRef = useRef(null);
 
-  // Handle resize Hook
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -44,13 +46,13 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
   const { trade, coreCourses, specialtyTracks } = tradeData;
 
-  // Calculate node positions for vertical layout
   const calculatePositions = () => {
     const { width, height } = dimensions;
-    const verticalSpacing = height / (coreCourses.length + 2);
-    const topOffset = verticalSpacing * 0.5; // Reduced top spacing
+    // Increase the base multiplier
+    let verticalSpacing = (height / (coreCourses.length + 1)) * VERTICAL_SPACING_MULTIPLIER;
+    verticalSpacing = Math.max(verticalSpacing, RANK_MIN_GAP);
+    const topOffset = verticalSpacing * 0.3;
     const horizontalCenter = width / 2;
-
     // Position core courses vertically centered
     const corePositions = coreCourses.map((course, index) => ({
       ...course,
@@ -61,7 +63,6 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
     // Position track courses branching off from the core courses
     const trackPositions = [];
-
     const totalTracks = specialtyTracks.length;
 
     specialtyTracks.forEach((track, trackIndex) => {
@@ -73,15 +74,18 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
 
       track.courses.forEach((course, index) => {
         const xOffset = xOffsetBase;
-        const yOffset = (index + 1) * VERTICAL_OFFSET;
-
+        // Add extra vertical spacing for sequential courses in same rank
         const previousCourseCode = course.prerequisites && course.prerequisites[0];
         const previousPosition = trackPositions.find((pos) => pos.courseCode === previousCourseCode);
-
+        
+        const yOffset = previousPosition 
+          ? previousPosition.y + VERTICAL_OFFSET  // If it has a prerequisite, stack it below
+          : basePosition.y + (index * VERTICAL_OFFSET); // Otherwise use normal spacing
+      
         trackPositions.push({
           ...course,
           x: previousPosition ? previousPosition.x : basePosition.x + xOffset,
-          y: previousPosition ? previousPosition.y + VERTICAL_OFFSET : basePosition.y + yOffset,
+          y: yOffset,
           isCore: false,
           track: track.code,
           color: track.color,
@@ -92,12 +96,9 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
     return [...corePositions, ...trackPositions];
   };
 
-  const nodePositions = calculatePositions();
-
-  // Generate paths
   const generatePaths = (nodePositions) => {
     const paths = [];
-
+  
     // Core paths
     for (let i = 0; i < coreCourses.length - 1; i++) {
       const start = nodePositions.find((n) => n.courseCode === coreCourses[i].courseCode);
@@ -106,45 +107,63 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
         paths.push({ start, end, isCore: true });
       }
     }
-
+  
     // Track paths
     specialtyTracks.forEach((track) => {
-      // Sort track courses based on their sequence in the track
-      const sortedCourses = track.courses; // Assuming they are already in order
-
+      const sortedCourses = track.courses;
+  
       sortedCourses.forEach((course, index) => {
         const currentNode = nodePositions.find((n) => n.courseCode === course.courseCode);
+        
+        // Skip if current node doesn't exist
+        if (!currentNode) return;
+  
         let startNode = null;
-
-        if (index === 0) {
-          // First course in the track, connect to base course
+  
+        if (course.prerequisites && course.prerequisites.length > 0) {
+          // Look for prerequisite in nodePositions
+          startNode = nodePositions.find(
+            (n) => n.courseCode === course.prerequisites[0]
+          );
+        } else if (index === 0) {
+          // First course in track, connect to base course
           const baseCourse = coreCourses.find((c) => c.rank === track.minimumRank);
           startNode = nodePositions.find((n) => n.courseCode === baseCourse.courseCode);
-        } else {
-          // Connect to the previous course in the track
-          const previousCourseCode = sortedCourses[index - 1].courseCode;
-          startNode = nodePositions.find((n) => n.courseCode === previousCourseCode);
         }
-
-        if (currentNode && startNode) {
-          paths.push({ start: startNode, end: currentNode, track: track.code });
+  
+        // Only add path if we have both valid start and end nodes
+        if (startNode && currentNode) {
+          paths.push({ 
+            start: startNode, 
+            end: currentNode, 
+            track: track.code 
+          });
         }
       });
     });
-
+  
     return paths;
   };
 
+  const nodePositions = calculatePositions();
   const paths = generatePaths(nodePositions);
 
   const getTrackColor = (trackCode) => {
-    const track = specialtyTracks.find((t) => t.code === trackCode);
-    return track ? track.color : '#4A5F31';
+  const track = specialtyTracks.find((t) => t.code === trackCode);
+  if (!track) return '#4A5F31';
+  
+  // Use more distinct colors for tracks
+  const trackColors = {
+    'default': '#4A5F31',
+    'highlighted': '#2B5F82', // Navy blue
+    'selected': '#8B4513'  // Brown
   };
+  
+  return track.color || trackColors.highlighted;
+};
+  const gridSize = 30; // Increased grid size
 
-  const gridSize = 20;
-
-  // Calculate rank positions (ensure ranks are sorted correctly)
+  // Calculate rank positions
   const calculateRankPositions = () => {
     const ranks = [...new Set(nodePositions.map((node) => node.rank))];
     const rankOrder = {
@@ -165,9 +184,7 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
     ranks.sort((a, b) => rankOrder[a] - rankOrder[b]);
 
     const rankPositions = ranks.map((rank) => {
-      // Find nodes with this rank
       const nodesAtRank = nodePositions.filter((node) => node.rank === rank);
-      // Calculate the min and max Y positions for this rank
       const minY = Math.min(...nodesAtRank.map((node) => node.y));
       const maxY = Math.max(...nodesAtRank.map((node) => node.y));
       return { rank, minY, maxY };
@@ -215,7 +232,6 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
             aria-label={`Select ${track.name} Track`}
           >
             {track.name}
-            {/* CSS-Only Tooltip */}
             <span className="tooltip-text">{track.name}</span>
           </button>
         ))}
@@ -224,7 +240,7 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
       {/* Scrollable Content Area */}
       <div className="scrollable-content">
         <svg
-          className="w-full h-full"
+          className="w-full h-full min-w-full min-h-full"
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'rgba(74, 95, 49, 0.05)' }}
@@ -263,8 +279,8 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
                 }
               />
               <text
-                x={10} // Adjust as needed
-                y={rankZone.minY - NODE_RADIUS - 5} // Slightly above the top of the zone
+                x={10}
+                y={rankZone.minY - NODE_RADIUS - 5}
                 fill="#4A5F31"
                 fontFamily="'Military', monospace"
                 fontSize="14"
@@ -283,8 +299,7 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
               ? '#4A5F31'
               : isHighlighted
               ? getTrackColor(path.track)
-              : '#8B4513';
-
+              : '#8B4513'; 
             return (
               <g key={`path-${index}`}>
                 <path
@@ -323,7 +338,6 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
                   setSelectedNode(newSelectedNode);
 
                   if (newSelectedNode) {
-                    // Send a POST request to the server when a node is clicked
                     fetch('http://localhost:3000/api/node-click', {
                       method: 'POST',
                       headers: {
@@ -359,17 +373,18 @@ const NetworkPath = ({ tradeData, selectedNode, setSelectedNode, setNodeSessions
               >
                 <circle
                   r={NODE_RADIUS}
-                  fill={isSelected ? nodeColor : '#F4F6E9'}
+                  fill={isSelected ? nodeColor : '#F4F6E9'} // Changed from '#FF0000'
                   stroke={nodeColor}
                   strokeWidth={node.isCore ? 3 : 2}
                   className="transition-all duration-300"
                 />
+
                 <text
-                  y={20}
+                  y={25}
                   textAnchor="middle"
-                  className={`text-xs font-military ${
-                    isSelected ? 'fill-olive-800' : 'fill-olive-700'
-                  }`}
+                  className="text-sm font-military"
+                  fontSize="15" 
+                  fill={isSelected ? '#4A5F31' : '#718355'}
                   style={{ textTransform: 'uppercase' }}
                 >
                   {node.name || node.courseCode}

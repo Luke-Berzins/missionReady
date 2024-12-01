@@ -1,7 +1,72 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Mail, X, AlertCircle } from 'lucide-react';
+import { Mail, X, AlertCircle, Clock } from 'lucide-react';
 import './css/CourseDetails.css';
+
+const RequestedCourses = () => {
+  // Hardcoded requested courses data
+  const requestedCourses = [
+    {
+      courseCode: "CORE101",
+      name: "Basic Leadership",
+      school: "Command School",
+      startDate: "2024-12-01",
+      endDate: "2024-12-15",
+      status: "enrolled",
+      location: "Fort Baker"
+    },
+    {
+      courseCode: "ADV202",
+      name: "Advanced Tactics",
+      school: "Tactical School",
+      startDate: "2025-01-10",
+      endDate: "2025-01-24",
+      status: "pending",
+      location: "Fort Mason"
+    }
+  ];
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div className="course-details-panel">
+      <h3 className="course-details-title">Requested Courses</h3>
+      <div className="sessions-grid">
+        {requestedCourses.map((course, index) => (
+          <div 
+            className="session-card" 
+            key={index}
+            style={{ 
+              borderLeft: `4px solid ${course.status === 'enrolled' ? '#22c55e' : '#f59e0b'}`
+            }}
+          >
+            <div className="session-card-header">
+              <h5>{course.name}</h5>
+              <span className={`status-badge ${course.status}`}>
+                {course.status === 'enrolled' ? 'Enrolled' : 'Pending'}
+              </span>
+            </div>
+            <div className="session-card-body">
+              <p><strong>Course Code:</strong> {course.courseCode}</p>
+              <p><strong>School:</strong> {course.school}</p>
+              <p>
+                <strong>Date:</strong> {formatDate(course.startDate)} - {formatDate(course.endDate)}
+              </p>
+              <p><strong>Location:</strong> {course.location}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const EnrollmentConfirmation = ({ session, course, onBack, onSubmit }) => {
   const [additionalEmails, setAdditionalEmails] = useState('');
@@ -81,14 +146,13 @@ const EnrollmentConfirmation = ({ session, course, onBack, onSubmit }) => {
   );
 };
 
-const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
+const MainCourseDetails = ({ selectedNode, specialtyTracks, nodeSessions, onEnrollmentSubmit }) => {
   const [enrollingSession, setEnrollingSession] = useState(null);
 
   if (!selectedNode) return null;
 
   const { name, courseCode, isCore, rank, hours, type } = selectedNode;
 
-  // Find the track details if the course is part of a specialty track
   const trackDetails = !isCore
     ? specialtyTracks.find((t) => t.code === type)
     : null;
@@ -104,12 +168,6 @@ const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
     });
   };
 
-  const handleEnrollmentSubmit = (formData) => {
-    console.log('Enrollment request:', formData);
-    setEnrollingSession(null);
-    alert('Course request sent successfully!');
-  };
-
   if (enrollingSession) {
     return (
       <div className="course-details-panel">
@@ -117,7 +175,10 @@ const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
           session={enrollingSession}
           course={selectedNode}
           onBack={() => setEnrollingSession(null)}
-          onSubmit={handleEnrollmentSubmit}
+          onSubmit={(formData) => {
+            onEnrollmentSubmit(formData);
+            setEnrollingSession(null);
+          }}
         />
       </div>
     );
@@ -195,6 +256,67 @@ const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
       )}
     </div>
   );
+};
+
+const CourseDetails = ({ selectedNode, specialtyTracks, nodeSessions }) => {
+  const [showingRequested, setShowingRequested] = useState(false);
+
+  return (
+    <div className="course-details-container">
+      <div className="view-toggle-wrapper">
+        <button 
+          className="view-toggle-btn"
+          onClick={() => setShowingRequested(!showingRequested)}
+        >
+          <Clock size={16} />
+          {showingRequested ? 'View Course Details' : 'View Requested Courses'}
+        </button>
+      </div>
+
+      {showingRequested ? (
+        <RequestedCourses />
+      ) : (
+        <MainCourseDetails
+          selectedNode={selectedNode}
+          specialtyTracks={specialtyTracks}
+          nodeSessions={nodeSessions}
+          onEnrollmentSubmit={(formData) => {
+            console.log('Enrollment request:', formData);
+            setShowingRequested(true);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+MainCourseDetails.propTypes = {
+  selectedNode: PropTypes.shape({
+    name: PropTypes.string,
+    courseCode: PropTypes.string,
+    isCore: PropTypes.bool.isRequired,
+    rank: PropTypes.string,
+    hours: PropTypes.number,
+    type: PropTypes.string,
+  }),
+  specialtyTracks: PropTypes.arrayOf(
+    PropTypes.shape({
+      code: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      color: PropTypes.string,
+      minimumRank: PropTypes.string,
+      courses: PropTypes.arrayOf(PropTypes.object),
+    })
+  ).isRequired,
+  nodeSessions: PropTypes.arrayOf(
+    PropTypes.shape({
+      startDate: PropTypes.string.isRequired,
+      endDate: PropTypes.string.isRequired,
+      location: PropTypes.string.isRequired,
+      school: PropTypes.string.isRequired,
+    })
+  ),
+  onEnrollmentSubmit: PropTypes.func.isRequired,
 };
 
 EnrollmentConfirmation.propTypes = {
